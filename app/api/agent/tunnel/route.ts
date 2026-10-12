@@ -6,7 +6,7 @@ import { getIssuer } from "@/src/lib/oauth/oidc";
 import { ensureAgentTunnel } from "@/src/lib/tunnels/provision";
 
 export const runtime = "nodejs";
-const AGENT_CLIENT_ID = "oa_jveGzDNEj0by9neUceFrElkYfvGZHq4f";
+const AGENT_CLIENT_ID = "oa_lRsROH_4M6nZhGtuiX9Ulwe7Ei3Tp589";
 type AuthRow = { userId: string; clientId: string; scopes: string; resource: string; expiresAt: string; status: string; userDeleted: string | null; clientActive: boolean; clientDeleted: string | null; orgStatus: string | null; orgDeleted: string | null };
 async function authenticate(request: Request): Promise<{ userId: string } | Response> {
   const header = request.headers.get("authorization") ?? "";
