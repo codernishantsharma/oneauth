@@ -1,0 +1,212 @@
+[
+  {
+    "id": "column.public.access_tokens.resource",
+    "label": "Add column \"resource\" to \"access_tokens\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "resource",
+        "table": "access_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"resource\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "access_tokens",
+          "resource"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"resource\"",
+        "sql": "ALTER TABLE \"public\".\"access_tokens\" ADD COLUMN \"resource\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"resource\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "access_tokens",
+          "resource"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.authorization_codes.resource",
+    "label": "Add column \"resource\" to \"authorization_codes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "resource",
+        "table": "authorization_codes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"resource\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "authorization_codes",
+          "resource"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"resource\"",
+        "sql": "ALTER TABLE \"public\".\"authorization_codes\" ADD COLUMN \"resource\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"resource\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "authorization_codes",
+          "resource"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.refresh_tokens.resource",
+    "label": "Add column \"resource\" to \"refresh_tokens\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "resource",
+        "table": "refresh_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"resource\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "refresh_tokens",
+          "resource"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"resource\"",
+        "sql": "ALTER TABLE \"public\".\"refresh_tokens\" ADD COLUMN \"resource\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"resource\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "refresh_tokens",
+          "resource"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.refresh_tokens.scopes",
+    "label": "Add column \"scopes\" to \"refresh_tokens\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "scopes",
+        "table": "refresh_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"scopes\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "refresh_tokens",
+          "scopes"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"scopes\"",
+        "sql": "ALTER TABLE \"public\".\"refresh_tokens\" ADD COLUMN \"scopes\" text[] DEFAULT '{}' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"scopes\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "refresh_tokens",
+          "scopes"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.refresh_tokens.refresh_tokens_scopes_elem_not_null_de6fcc8e",
+    "label": "Add check constraint \"refresh_tokens_scopes_elem_not_null_de6fcc8e\" on \"refresh_tokens\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "refresh_tokens_scopes_elem_not_null_de6fcc8e",
+        "table": "refresh_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"refresh_tokens_scopes_elem_not_null_de6fcc8e\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "refresh_tokens_scopes_elem_not_null_de6fcc8e",
+          "public",
+          "\"public\".\"refresh_tokens\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"refresh_tokens_scopes_elem_not_null_de6fcc8e\"",
+        "sql": "ALTER TABLE \"public\".\"refresh_tokens\" ADD CONSTRAINT \"refresh_tokens_scopes_elem_not_null_de6fcc8e\" CHECK (array_position(\"scopes\", NULL) IS NULL)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"refresh_tokens_scopes_elem_not_null_de6fcc8e\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "refresh_tokens_scopes_elem_not_null_de6fcc8e",
+          "public",
+          "\"public\".\"refresh_tokens\""
+        ]
+      }
+    ]
+  }
+]

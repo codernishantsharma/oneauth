@@ -1,0 +1,170 @@
+[
+  {
+    "id": "column.public.api_keys.environment",
+    "label": "Add column \"environment\" to \"api_keys\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "environment",
+        "table": "api_keys"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"environment\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "api_keys",
+          "environment"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"environment\"",
+        "sql": "ALTER TABLE \"public\".\"api_keys\" ADD COLUMN \"environment\" text DEFAULT 'DEVELOPMENT' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"environment\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "api_keys",
+          "environment"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.oauth_clients.environment",
+    "label": "Add column \"environment\" to \"oauth_clients\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "environment",
+        "table": "oauth_clients"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"environment\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "oauth_clients",
+          "environment"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"environment\"",
+        "sql": "ALTER TABLE \"public\".\"oauth_clients\" ADD COLUMN \"environment\" text DEFAULT 'DEVELOPMENT' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"environment\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "oauth_clients",
+          "environment"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.api_keys.api_keys_environment_check_d1a2f0ff",
+    "label": "Add check constraint \"api_keys_environment_check_d1a2f0ff\" on \"api_keys\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "api_keys_environment_check_d1a2f0ff",
+        "table": "api_keys"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"api_keys_environment_check_d1a2f0ff\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "api_keys_environment_check_d1a2f0ff",
+          "public",
+          "\"public\".\"api_keys\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"api_keys_environment_check_d1a2f0ff\"",
+        "sql": "ALTER TABLE \"public\".\"api_keys\" ADD CONSTRAINT \"api_keys_environment_check_d1a2f0ff\" CHECK (\"environment\" IN ('DEVELOPMENT', 'PRODUCTION'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"api_keys_environment_check_d1a2f0ff\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "api_keys_environment_check_d1a2f0ff",
+          "public",
+          "\"public\".\"api_keys\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.oauth_clients.oauth_clients_environment_check_d1a2f0ff",
+    "label": "Add check constraint \"oauth_clients_environment_check_d1a2f0ff\" on \"oauth_clients\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "oauth_clients_environment_check_d1a2f0ff",
+        "table": "oauth_clients"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"oauth_clients_environment_check_d1a2f0ff\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "oauth_clients_environment_check_d1a2f0ff",
+          "public",
+          "\"public\".\"oauth_clients\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"oauth_clients_environment_check_d1a2f0ff\"",
+        "sql": "ALTER TABLE \"public\".\"oauth_clients\" ADD CONSTRAINT \"oauth_clients_environment_check_d1a2f0ff\" CHECK (\"environment\" IN ('DEVELOPMENT', 'PRODUCTION'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"oauth_clients_environment_check_d1a2f0ff\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "oauth_clients_environment_check_d1a2f0ff",
+          "public",
+          "\"public\".\"oauth_clients\""
+        ]
+      }
+    ]
+  }
+]

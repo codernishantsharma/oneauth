@@ -1,0 +1,982 @@
+// use prisma-8
+
+enum user_status {
+  @@type("pg/text@1")
+  ACTIVE = "ACTIVE"
+  SUSPENDED = "SUSPENDED"
+  DELETED = "DELETED"
+}
+
+enum external_provider {
+  @@type("pg/text@1")
+  GOOGLE = "GOOGLE"
+  GITHUB = "GITHUB"
+  APPLE = "APPLE"
+  MICROSOFT = "MICROSOFT"
+}
+
+enum passkey_device_type {
+  @@type("pg/text@1")
+  SINGLE_DEVICE = "SINGLE_DEVICE"
+  MULTI_DEVICE = "MULTI_DEVICE"
+}
+
+enum oauth_client_type {
+  @@type("pg/text@1")
+  WEB = "WEB"
+  SPA_PUBLIC = "SPA_PUBLIC"
+  NATIVE = "NATIVE"
+  DESKTOP = "DESKTOP"
+  CLI = "CLI"
+  SERVICE = "SERVICE"
+}
+
+enum client_auth_method {
+  @@type("pg/text@1")
+  NONE = "NONE"
+  CLIENT_SECRET_BASIC = "CLIENT_SECRET_BASIC"
+  CLIENT_SECRET_POST = "CLIENT_SECRET_POST"
+  PRIVATE_KEY_JWT = "PRIVATE_KEY_JWT"
+}
+enum oauth_environment {
+  @@type("pg/text@1")
+  DEVELOPMENT = "DEVELOPMENT"
+  PRODUCTION = "PRODUCTION"
+}
+
+
+enum oauth_consent_status {
+  @@type("pg/text@1")
+  ACTIVE = "ACTIVE"
+  REVOKED = "REVOKED"
+}
+
+enum signing_key_status {
+  @@type("pg/text@1")
+  PENDING = "PENDING"
+  ACTIVE = "ACTIVE"
+  RETIRED = "RETIRED"
+  REVOKED = "REVOKED"
+}
+
+enum device_authorization_status {
+  @@type("pg/text@1")
+  PENDING = "PENDING"
+  APPROVED = "APPROVED"
+  DENIED = "DENIED"
+  EXPIRED = "EXPIRED"
+  CONSUMED = "CONSUMED"
+}
+
+enum organization_status {
+  @@type("pg/text@1")
+  ACTIVE = "ACTIVE"
+  SUSPENDED = "SUSPENDED"
+  DELETED = "DELETED"
+}
+
+enum membership_status {
+  @@type("pg/text@1")
+  INVITED = "INVITED"
+  ACTIVE = "ACTIVE"
+  SUSPENDED = "SUSPENDED"
+}
+
+enum role_type {
+  @@type("pg/text@1")
+  SYSTEM = "SYSTEM"
+  ORGANIZATION = "ORGANIZATION"
+}
+
+enum security_event_type {
+  @@type("pg/text@1")
+  ACCOUNT_CREATED = "ACCOUNT_CREATED"
+  EMAIL_ADDED = "EMAIL_ADDED"
+  EMAIL_REMOVED = "EMAIL_REMOVED"
+  EMAIL_VERIFIED = "EMAIL_VERIFIED"
+  PRIMARY_EMAIL_CHANGED = "PRIMARY_EMAIL_CHANGED"
+  USERNAME_CHANGED = "USERNAME_CHANGED"
+  PROFILE_UPDATED = "PROFILE_UPDATED"
+  ACCOUNT_ACTIVATED = "ACCOUNT_ACTIVATED"
+  ACCOUNT_SUSPENDED = "ACCOUNT_SUSPENDED"
+  ACCOUNT_REACTIVATED = "ACCOUNT_REACTIVATED"
+  ACCOUNT_DEACTIVATED = "ACCOUNT_DEACTIVATED"
+  LOGIN_SUCCESS = "LOGIN_SUCCESS"
+  LOGIN_FAILED = "LOGIN_FAILED"
+  LOGOUT = "LOGOUT"
+  PASSWORD_CHANGED = "PASSWORD_CHANGED"
+  PASSWORD_RESET = "PASSWORD_RESET"
+  PASSKEY_ADDED = "PASSKEY_ADDED"
+  PASSKEY_REMOVED = "PASSKEY_REMOVED"
+  TOTP_ENABLED = "TOTP_ENABLED"
+  TOTP_DISABLED = "TOTP_DISABLED"
+  RECOVERY_CODE_USED = "RECOVERY_CODE_USED"
+  OAUTH_AUTHORIZED = "OAUTH_AUTHORIZED"
+  OAUTH_REVOKED = "OAUTH_REVOKED"
+  SESSION_CREATED = "SESSION_CREATED"
+  SESSION_REVOKED = "SESSION_REVOKED"
+  API_KEY_CREATED = "API_KEY_CREATED"
+  API_KEY_REVOKED = "API_KEY_REVOKED"
+  ACCOUNT_RECOVERY_STARTED = "ACCOUNT_RECOVERY_STARTED"
+  ACCOUNT_RECOVERY_COMPLETED = "ACCOUNT_RECOVERY_COMPLETED"
+}
+
+enum login_attempt_result {
+  @@type("pg/text@1")
+  SUCCESS = "SUCCESS"
+  FAILURE = "FAILURE"
+  CHALLENGE = "CHALLENGE"
+  BLOCKED = "BLOCKED"
+}
+
+enum recovery_status {
+  @@type("pg/text@1")
+  PENDING = "PENDING"
+  APPROVED = "APPROVED"
+  DENIED = "DENIED"
+  COMPLETED = "COMPLETED"
+  EXPIRED = "EXPIRED"
+}
+
+enum security_notification_type {
+  @@type("pg/text@1")
+  NEW_LOGIN = "NEW_LOGIN"
+  PASSWORD_CHANGED = "PASSWORD_CHANGED"
+  PASSWORD_RESET = "PASSWORD_RESET"
+  PASSKEY_ADDED = "PASSKEY_ADDED"
+  PASSKEY_REMOVED = "PASSKEY_REMOVED"
+  TOTP_CHANGED = "TOTP_CHANGED"
+  SESSION_REVOKED = "SESSION_REVOKED"
+  OAUTH_ACCESS_GRANTED = "OAUTH_ACCESS_GRANTED"
+  OAUTH_ACCESS_REVOKED = "OAUTH_ACCESS_REVOKED"
+  API_KEY_CHANGED = "API_KEY_CHANGED"
+  ACCOUNT_RECOVERY = "ACCOUNT_RECOVERY"
+  SECURITY_ALERT = "SECURITY_ALERT"
+}
+
+enum webhook_status {
+  @@type("pg/text@1")
+  ACTIVE = "ACTIVE"
+  DISABLED = "DISABLED"
+}
+
+enum webhook_delivery_status {
+  @@type("pg/text@1")
+  PENDING = "PENDING"
+  SUCCEEDED = "SUCCEEDED"
+  FAILED = "FAILED"
+  ABANDONED = "ABANDONED"
+}
+
+enum organization_sso_protocol {
+  @@type("pg/text@1")
+  OIDC = "OIDC"
+  SAML = "SAML"
+}
+
+model User {
+  @@rls
+
+  id          Uuid        @id @default(uuid())
+  status      user_status  @default(ACTIVE)
+  createdAt   TimestamptzString(3) @default(now()) @map("created_at")
+  updatedAt   TimestamptzString(3) @default(now()) @map("updated_at")
+  deletedAt   TimestamptzString(3)? @map("deleted_at")
+  lastLoginAt TimestamptzString(3)? @map("last_login_at")
+
+  @@check(expression: "(status = 'DELETED') = (deleted_at IS NOT NULL)", name: "user_status_matches_deleted_at")
+  @@index([status])
+  userRoles       UserRole[] @relation("UserRoleTarget")
+  assignedUserRoles UserRole[] @relation("UserRoleAssigner")
+
+  @@map("users")
+}
+
+model Profile {
+  @@rls
+
+  id                Uuid   @id @default(uuid())
+  userId            Uuid   @unique @map("user_id")
+  user              User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName       String? @map("display_name")
+  username          String?
+  normalizedUsername String? @unique @map("normalized_username")
+  avatarUrl         String? @map("avatar_url")
+  locale            String?
+  timeZone          String? @map("time_zone")
+  createdAt         TimestamptzString(3) @default(now()) @map("created_at")
+  updatedAt         TimestamptzString(3) @default(now()) @map("updated_at")
+  customData        Jsonb? @map("custom_data")
+  @@map("profiles")
+}
+
+model EmailAddress {
+  @@rls
+
+  id             Uuid   @id @default(uuid())
+  userId         Uuid   @map("user_id")
+  user           User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  normalizedEmail String @unique @map("normalized_email")
+  verifiedAt     TimestamptzString(3)? @map("verified_at")
+  isPrimary      Boolean @default(false) @map("is_primary")
+  createdAt      TimestamptzString(3) @default(now()) @map("created_at")
+  updatedAt      TimestamptzString(3) @default(now()) @map("updated_at")
+
+  @@index([userId], where: "(is_primary = true)", unique: true, name: "email_one_primary_per_user")
+  @@index([userId, isPrimary])
+  @@index([userId, verifiedAt])
+  @@map("email_addresses")
+}
+
+model PasswordCredential {
+  @@rls
+
+  id           Uuid   @id @default(uuid())
+  userId       Uuid   @unique @map("user_id")
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passwordHash String @map("password_hash")
+  hashAlgorithm String @default("argon2id") @map("hash_algorithm")
+  changedAt    TimestamptzString(3) @default(now()) @map("changed_at")
+  createdAt    TimestamptzString(3) @default(now()) @map("created_at")
+
+  @@check(expression: "hash_algorithm = 'argon2id'", name: "password_hashes_use_argon2id")
+  @@map("password_credentials")
+}
+
+model PasskeyCredential {
+  @@rls
+
+  id                Uuid   @id @default(uuid())
+  userId            Uuid   @map("user_id")
+  user              User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credentialId      Bytes  @unique @map("credential_id")
+  publicKey         Bytes  @map("public_key")
+  signatureCounter  BigInt @default(0) @map("signature_counter")
+  transports        String[] @default([])
+  deviceType        passkey_device_type @map("device_type")
+  backedUp          Boolean @default(false) @map("backed_up")
+  aaguid            String?
+  name              String @map("credential_name")
+  createdAt         TimestamptzString(3) @default(now()) @map("created_at")
+  lastUsedAt        TimestamptzString(3)? @map("last_used_at")
+
+  @@index([userId, createdAt])
+  @@check(expression: "signature_counter >= 0", name: "passkey_counter_nonnegative")
+  @@map("passkey_credentials")
+}
+
+model TotpCredential {
+  @@rls
+
+  id                    Uuid   @id @default(uuid())
+  userId                Uuid   @map("user_id")
+  user                  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                  String?
+  secretCiphertext      Bytes  @map("secret_ciphertext")
+  secretNonce           Bytes  @map("secret_nonce")
+  secretAuthTag         Bytes  @map("secret_auth_tag")
+  encryptionKeyRef      String @map("encryption_key_ref")
+  encryptionAlgorithm   String @default("AES-256-GCM") @map("encryption_algorithm")
+  isEnabled             Boolean @default(false) @map("is_enabled")
+  enabledAt             TimestamptzString(3)? @map("enabled_at")
+  createdAt             TimestamptzString(3) @default(now()) @map("created_at")
+  updatedAt             TimestamptzString(3) @default(now()) @map("updated_at")
+
+  @@index([userId, isEnabled])
+  @@check(expression: "octet_length(secret_ciphertext) > 0 AND octet_length(secret_nonce) > 0 AND octet_length(secret_auth_tag) > 0", name: "totp_secret_is_encrypted")
+  @@check(expression: "is_enabled = (enabled_at IS NOT NULL)", name: "totp_enabled_state_matches_timestamp")
+  @@map("totp_credentials")
+}
+
+model RecoveryCode {
+  @@rls
+
+  id         Uuid   @id @default(uuid())
+  userId     Uuid   @map("user_id")
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash   String @unique @map("code_hash")
+  createdAt  TimestamptzString(3) @default(now()) @map("created_at")
+  usedAt     TimestamptzString(3)? @map("used_at")
+
+  @@index([userId, usedAt])
+  @@map("recovery_codes")
+}
+
+model ExternalIdentity {
+  @@rls
+
+  id                Uuid   @id @default(uuid())
+  userId            Uuid   @map("user_id")
+  user              User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider          external_provider
+  providerUserId    String @map("provider_user_id")
+  providerEmail     String? @map("provider_email")
+  providerEmailVerified Boolean? @map("provider_email_verified")
+  createdAt         TimestamptzString(3) @default(now()) @map("created_at")
+  updatedAt         TimestamptzString(3) @default(now()) @map("updated_at")
+  lastUsedAt        TimestamptzString(3)? @map("last_used_at")
+
+  @@unique([provider, providerUserId])
+  @@index([userId, provider])
+  @@map("external_identities")
+}
+
+model Device {
+  @@rls
+
+  id                Uuid   @id @default(uuid())
+  userId            Uuid   @map("user_id")
+  user              User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceKeyHash     String? @unique @map("device_key_hash")
+  name              String?
+  deviceType        String? @map("device_type")
+  platform          String?
+  firstSeenAt       TimestamptzString(3) @default(now()) @map("first_seen_at")
+  lastSeenAt        TimestamptzString(3)? @map("last_seen_at")
+  revokedAt         TimestamptzString(3)? @map("revoked_at")
+
+  @@index([userId, lastSeenAt])
+  @@map("devices")
+}
+
+model Session {
+  @@rls
+
+  id              Uuid   @id @default(uuid())
+  userId          Uuid   @map("user_id")
+  user            User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId        Uuid?  @map("device_id")
+  device          Device? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  oauthClientId   Uuid?  @map("oauth_client_id")
+  oauthClient     OAuthClient? @relation(fields: [oauthClientId], references: [id], onDelete: SetNull)
+  sessionHash     String @unique @map("session_hash")
+  createdAt       TimestamptzString(3) @default(now()) @map("created_at")
+  lastSeenAt      TimestamptzString(3) @default(now()) @map("last_seen_at")
+  expiresAt       TimestamptzString(3) @map("expires_at")
+  revokedAt       TimestamptzString(3)? @map("revoked_at")
+  ipAddress       String? @map("ip_address")
+  userAgent       String? @map("user_agent")
+
+  @@index([userId, revokedAt, expiresAt])
+  @@index([deviceId, revokedAt])
+  @@index([oauthClientId, userId])
+  @@check(expression: "expires_at > created_at", name: "session_expiration_after_creation")
+  @@map("sessions")
+}
+
+model RefreshToken {
+  @@rls
+
+  id              Uuid   @id @default(uuid())
+  userId          Uuid?  @map("user_id")
+  user            User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId       Uuid?  @map("session_id")
+  session         Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  oauthClientId   Uuid   @map("oauth_client_id")
+  oauthClient     OAuthClient @relation(fields: [oauthClientId], references: [id], onDelete: Restrict)
+  familyId        Uuid   @map("family_id")
+  tokenHash       String @unique @map("token_hash")
+  scopes          String[] @default([])
+  resource        String? @map("resource")
+  replacementOfId Uuid?  @unique @map("replacement_of_id")
+  replacementOf   RefreshToken? @relation("RefreshTokenRotation", fields: [replacementOfId], references: [id], onDelete: SetNull)
+  replacedBy      RefreshToken? @relation("RefreshTokenRotation")
+  issuedAt        TimestamptzString(3) @default(now()) @map("issued_at")
+  expiresAt       TimestamptzString(3) @map("expires_at")
+  revokedAt       TimestamptzString(3)? @map("revoked_at")
+  reuseDetectedAt TimestamptzString(3)? @map("reuse_detected_at")
+
+  @@index([familyId, revokedAt])
+  @@index([userId, oauthClientId, expiresAt])
+  @@index([sessionId])
+  @@check(expression: "expires_at > issued_at", name: "refresh_token_expiration_after_issue")
+  @@map("refresh_tokens")
+}
+
+model OAuthClient {
+  @@rls
+
+  id                    Uuid   @id @default(uuid())
+  clientId              String @unique @map("client_id")
+  clientSecretHash      String? @map("client_secret_hash")
+  clientType            oauth_client_type @map("client_type")
+  tokenEndpointAuthMethod client_auth_method @default(NONE) @map("token_endpoint_auth_method")
+  name                  String
+  description           String?
+  ownerUserId           Uuid?  @map("owner_user_id")
+  ownerUser             User?  @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+  organizationId        Uuid?  @map("organization_id")
+  organization          Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  isActive              Boolean @default(true) @map("is_active")
+  grantTypes            String[] @map("grant_types")
+  responseTypes         String[] @map("response_types")
+  createdAt             TimestamptzString(3) @default(now()) @map("created_at")
+  updatedAt             TimestamptzString(3) @default(now()) @map("updated_at")
+  environment           oauth_environment @default(DEVELOPMENT)
+  deletedAt             TimestamptzString(3)? @map("deleted_at")
+
+  @@check(expression: "(client_type NOT IN ('SPA_PUBLIC', 'NATIVE', 'DESKTOP', 'CLI') OR (client_secret_hash IS NULL AND token_endpoint_auth_method = 'NONE'))", name: "oauth_public_clients_without_secrets")
+  @@check(expression: "(client_type NOT IN ('WEB', 'SERVICE') OR token_endpoint_auth_method != 'NONE')", name: "oauth_confidential_clients_authenticate")
+  @@check(expression: "(token_endpoint_auth_method NOT IN ('CLIENT_SECRET_BASIC', 'CLIENT_SECRET_POST') OR client_secret_hash IS NOT NULL)", name: "oauth_secret_auth_requires_hash")
+  @@index([ownerUserId, isActive])
+  @@index([organizationId, isActive])
+  @@map("oauth_clients")
+}
+
+model RedirectURI {
+  @@rls
+
+  id            Uuid   @id @default(uuid())
+  oauthClientId Uuid   @map("oauth_client_id")
+  oauthClient   OAuthClient @relation(fields: [oauthClientId], references: [id], onDelete: Cascade)
+  uri           String
+  createdAt     TimestamptzString(3) @default(now()) @map("created_at")
+
+  @@unique([oauthClientId, uri])
+  @@map("oauth_redirect_uris")
+}
+
+model AllowedOrigin {
+  @@rls
+
+  id            Uuid   @id @default(uuid())
+  oauthClientId Uuid   @map("oauth_client_id")
+  oauthClient   OAuthClient @relation(fields: [oauthClientId], references: [id], onDelete: Cascade)
+  origin        String
+  createdAt     TimestamptzString(3) @default(now()) @map("created_at")
+
+  @@unique([oauthClientId, origin])
+  @@map("oauth_allowed_origins")
+}
+
+model OAuthScope {
+  @@rls
+
+  id          Uuid   @id @default(uuid())
+  name        String @unique
+  description String?
+  isDefault   Boolean @default(false) @map("is_default")
+  createdAt   TimestamptzString(3) @default(now()) @map("created_at")
+
+  @@map("oauth_scopes")
+}
+
+model OAuthClientScope {
+  @@rls
+
+  id            Uuid   @id @default(uuid())
+  oauthClientId Uuid   @map("oauth_client_id")
+  oauthClient   OAuthClient @relation(fields: [oauthClientId], references: [id], onDelete: Cascade)
+  scopeName     String @map("scope_name")
+  scope         OAuthScope @relation(fields: [scopeName], references: [name], onDelete: Restrict)
+  createdAt     TimestamptzString(3) @default(now()) @map("created_at")
+
+  @@unique([oauthClientId, scopeName])
+  @@index([scopeName])
+  @@map("oauth_client_scopes")
+}
+
+model OAuthConsent {
+  @@rls
+
+  id            Uuid   @id @default(uuid())
+  userId        Uuid   @map("user_id")
+  user          User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  oauthClientId Uuid   @map("oauth_client_id")
+  oauthClient   OAuthClient @relation(fields: [oauthClientId], references: [id], onDelete: Cascade)
+  status        oauth_consent_status @default(ACTIVE)
+  grantedAt     TimestamptzString(3) @default(now()) @map("granted_at")
+  revokedAt     TimestamptzString(3)? @map("revoked_at")
+  expiresAt     TimestamptzString(3)? @map("expires_at")
+
+  @@unique([userId, oauthClientId])
+  @@index([oauthClientId, status])
+  @@map("oauth_consents")
+}
+
+model OAuthConsentScope {
+  @@rls
+
+  id             Uuid   @id @default(uuid())
+  consentId      Uuid   @map("consent_id")
+  consent        OAuthConsent @relation(fields: [consentId], references: [id], onDelete: Cascade)
+  scopeName      String @map("scope_name")
+  scope          OAuthScope @relation(fields: [scopeName], references: [name], onDelete: Restrict)
+  grantedAt      TimestamptzString(3) @default(now()) @map("granted_at")
+
+  @@unique([consentId, scopeName])
+  @@index([scopeName])
+  @@map("oauth_consent_scopes")
+}
+
+model AuthorizationCode {
+  @@rls
+
+  id                    Uuid   @id @default(uuid())
+  codeHash              String @unique @map("code_hash")
+  userId                Uuid   @map("user_id")
+  user                  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  oauthClientId         Uuid   @map("oauth_client_id")
+  oauthClient           OAuthClient @relation(fields: [oauthClientId], references: [id], onDelete: Cascade)
+  redirectUri           String @map("redirect_uri")
+  redirectRegistration RedirectURI @relation(fields: [oauthClientId, redirectUri], references: [oauthClientId, uri], onDelete: Cascade)
+  pkceChallenge         String @map("pkce_challenge")
+  pkceChallengeMethod   String @default("S256") @map("pkce_challenge_method")
+  scopes                String[] @default([])
+  nonce                 String?
+  resource              String? @map("resource")
+  sessionId             Uuid?  @map("session_id")
+  session               Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  issuedAt              TimestamptzString(3) @default(now()) @map("issued_at")
+  expiresAt             TimestamptzString(3) @map("expires_at")
+  consumedAt            TimestamptzString(3)? @map("consumed_at")
+
+  @@index([oauthClientId, expiresAt, consumedAt], name: "auth_code_client_exp_used")
+  @@index([userId, issuedAt])
+  @@check(expression: "expires_at > issued_at AND pkce_challenge_method = 'S256' AND (consumed_at IS NULL OR consumed_at >= issued_at)", name: "authorization_code_lifetime_and_pkce")
+  @@map("authorization_codes")
+}
+
+model AccessToken {
+  @@rls
+
+  id            Uuid   @id @default(uuid())
+  tokenHash     String @unique @map("token_hash")
+  userId        Uuid?  @map("user_id")
+  user          User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  oauthClientId Uuid   @map("oauth_client_id")
+  oauthClient   OAuthClient @relation(fields: [oauthClientId], references: [id], onDelete: Cascade)
+  sessionId     Uuid?  @map("session_id")
+  session       Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  scopes        String[] @default([])
+  resource      String? @map("resource")
+  issuedAt      TimestamptzString(3) @default(now()) @map("issued_at")
+  expiresAt     TimestamptzString(3) @map("expires_at")
+  revokedAt     TimestamptzString(3)? @map("revoked_at")
+
+  @@index([oauthClientId, expiresAt, revokedAt], name: "access_client_exp_revoked")
+  @@index([userId, expiresAt])
+  @@index([sessionId])
+  @@check(expression: "expires_at > issued_at", name: "access_token_expiration_after_issue")
+  @@map("access_tokens")
+}
+
+model DeviceAuthorization {
+  @@rls
+
+  id               Uuid   @id @default(uuid())
+  deviceCodeHash   String @unique @map("device_code_hash")
+  userCode         String @unique @map("user_code")
+  oauthClientId    Uuid   @map("oauth_client_id")
+  oauthClient      OAuthClient @relation(fields: [oauthClientId], references: [id], onDelete: Cascade)
+  userId           Uuid?  @map("user_id")
+  user             User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scopes           String[] @default([])
+  status          device_authorization_status @default(PENDING)
+  intervalSeconds  Int    @default(5) @map("interval_seconds")
+  createdAt        TimestamptzString(3) @default(now()) @map("created_at")
+  expiresAt        TimestamptzString(3) @map("expires_at")
+  approvedAt       TimestamptzString(3)? @map("approved_at")
+  consumedAt       TimestamptzString(3)? @map("consumed_at")
+
+  @@index([oauthClientId, status, expiresAt], name: "device_auth_client_status_exp")
+  @@index([userId, createdAt])
+  @@check(expression: "expires_at > created_at AND interval_seconds > 0", name: "device_authorization_valid_lifetime")
+  @@map("device_authorizations")
+}
+
+model OidcSigningKey {
+  @@rls
+
+  id              Uuid   @id @default(uuid())
+  kid             String @unique
+  algorithm       String
+  publicJwk       Jsonb  @map("public_jwk")
+  status          signing_key_status @default(PENDING)
+  privateKeyRef   String @map("private_key_ref")
+  createdAt       TimestamptzString(3) @default(now()) @map("created_at")
+  activatedAt     TimestamptzString(3)? @map("activated_at")
+  retiredAt       TimestamptzString(3)? @map("retired_at")
+
+  @@index([status, activatedAt])
+  @@map("oidc_signing_keys")
+}
+
+model EmailVerification {
+  @@rls
+
+  id              Uuid   @id @default(uuid())
+  tokenHash       String @unique @map("token_hash")
+  userId          Uuid   @map("user_id")
+  user            User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailAddressId  Uuid   @map("email_address_id")
+  emailAddress    EmailAddress @relation(fields: [emailAddressId], references: [id], onDelete: Cascade)
+  createdAt       TimestamptzString(3) @default(now()) @map("created_at")
+  expiresAt       TimestamptzString(3) @map("expires_at")
+  consumedAt      TimestamptzString(3)? @map("consumed_at")
+
+  @@index([userId, expiresAt, consumedAt])
+  @@check(expression: "expires_at > created_at", name: "email_verification_expiration_after_creation")
+  @@map("email_verifications")
+}
+
+model MagicLinkToken {
+  @@rls
+
+  id              Uuid   @id @default(uuid())
+  tokenHash       String @unique @map("token_hash")
+  normalizedEmail String @map("normalized_email")
+  userId          Uuid?  @map("user_id")
+  user            User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       TimestamptzString(3) @default(now()) @map("created_at")
+  expiresAt       TimestamptzString(3) @map("expires_at")
+  consumedAt      TimestamptzString(3)? @map("consumed_at")
+
+  @@index([normalizedEmail, expiresAt])
+  @@index([userId, expiresAt, consumedAt])
+  @@check(expression: "expires_at > created_at", name: "magic_link_expiration_after_creation")
+  @@map("magic_link_tokens")
+}
+
+model PasswordReset {
+  @@rls
+
+  id          Uuid   @id @default(uuid())
+  tokenHash   String @unique @map("token_hash")
+  userId      Uuid   @map("user_id")
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   TimestamptzString(3) @default(now()) @map("created_at")
+  expiresAt   TimestamptzString(3) @map("expires_at")
+  consumedAt  TimestamptzString(3)? @map("consumed_at")
+
+  @@index([userId, expiresAt, consumedAt])
+  @@check(expression: "expires_at > created_at", name: "password_reset_expiration_after_creation")
+  @@map("password_resets")
+}
+
+model AccountRecovery {
+  @@rls
+
+  id              Uuid   @id @default(uuid())
+  requestHash     String @unique @map("request_hash")
+  userId          Uuid   @map("user_id")
+  user            User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status          recovery_status @default(PENDING)
+  reasonCode      String? @map("reason_code")
+  createdAt       TimestamptzString(3) @default(now()) @map("created_at")
+  expiresAt       TimestamptzString(3) @map("expires_at")
+  reviewedAt      TimestamptzString(3)? @map("reviewed_at")
+  completedAt     TimestamptzString(3)? @map("completed_at")
+
+  @@index([userId, status, createdAt])
+  @@index([status, expiresAt])
+  @@check(expression: "expires_at > created_at", name: "account_recovery_expiration_after_creation")
+  @@map("account_recoveries")
+}
+
+model APIKey {
+  @@rls
+
+  id             Uuid   @id @default(uuid())
+  prefix         String
+  secretHash     String @unique @map("secret_hash")
+  name           String
+  environment    oauth_environment @default(DEVELOPMENT)
+  userId         Uuid?  @map("user_id")
+  user           User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId Uuid?  @map("organization_id")
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  scopes         String[] @default([])
+  createdAt      TimestamptzString(3) @default(now()) @map("created_at")
+  expiresAt      TimestamptzString(3)? @map("expires_at")
+  lastUsedAt     TimestamptzString(3)? @map("last_used_at")
+  revokedAt      TimestamptzString(3)? @map("revoked_at")
+
+  @@check(expression: "(user_id IS NOT NULL) <> (organization_id IS NOT NULL)", name: "api_key_has_one_owner")
+  @@index([userId, revokedAt])
+  @@index([organizationId, revokedAt])
+  @@index([prefix])
+  @@check(expression: "(expires_at IS NULL OR expires_at > created_at)", name: "api_key_expiration_after_creation")
+  @@map("api_keys")
+}
+
+model Webhook {
+  @@rls
+
+  id                    Uuid   @id @default(uuid())
+  organizationId        Uuid?  @map("organization_id")
+  organization          Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  ownerUserId           Uuid?  @map("owner_user_id")
+  ownerUser             User?  @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  url                   String
+  events                String[] @default([])
+  secretCiphertext      Bytes  @map("secret_ciphertext")
+  secretNonce           Bytes  @map("secret_nonce")
+  secretAuthTag         Bytes  @map("secret_auth_tag")
+  encryptionKeyRef      String @map("encryption_key_ref")
+  status                webhook_status @default(ACTIVE)
+  createdAt             TimestamptzString(3) @default(now()) @map("created_at")
+  updatedAt             TimestamptzString(3) @default(now()) @map("updated_at")
+
+  @@check(expression: "(organization_id IS NOT NULL) <> (owner_user_id IS NOT NULL)", name: "webhook_has_one_owner")
+  @@check(expression: "octet_length(secret_ciphertext) > 0 AND octet_length(secret_nonce) > 0 AND octet_length(secret_auth_tag) > 0", name: "webhook_secret_is_encrypted")
+  @@index([organizationId, status])
+  @@index([ownerUserId, status])
+  @@map("webhooks")
+}
+
+model WebhookDelivery {
+  @@rls
+
+  id              Uuid   @id @default(uuid())
+  webhookId       Uuid   @map("webhook_id")
+  webhook         Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  status          webhook_delivery_status @default(PENDING)
+  eventType       String @map("event_type")
+  payload         Jsonb
+  attemptCount    Int    @default(0) @map("attempt_count")
+  nextAttemptAt   TimestamptzString(3)? @map("next_attempt_at")
+  createdAt       TimestamptzString(3) @default(now()) @map("created_at")
+  completedAt     TimestamptzString(3)? @map("completed_at")
+
+  @@index([webhookId, status, nextAttemptAt], name: "webhook_delivery_retry")
+  @@index([status, nextAttemptAt])
+  @@map("webhook_deliveries")
+}
+
+model Organization {
+  @@rls
+
+  id          Uuid   @id @default(uuid())
+  name        String
+  slug        String @unique
+  status      organization_status @default(ACTIVE)
+  createdAt   TimestamptzString(3) @default(now()) @map("created_at")
+  updatedAt   TimestamptzString(3) @default(now()) @map("updated_at")
+  deletedAt   TimestamptzString(3)? @map("deleted_at")
+
+  @@map("organizations")
+}
+
+model OrganizationMembership {
+  @@rls
+
+  id              Uuid   @id @default(uuid())
+  organizationId  Uuid   @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId          Uuid   @map("user_id")
+  user            User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status          membership_status @default(INVITED)
+  invitedAt       TimestamptzString(3) @default(now()) @map("invited_at")
+  joinedAt        TimestamptzString(3)? @map("joined_at")
+  createdAt       TimestamptzString(3) @default(now()) @map("created_at")
+  updatedAt       TimestamptzString(3) @default(now()) @map("updated_at")
+
+  @@unique([organizationId, userId])
+  @@index([userId, status])
+  @@index([organizationId, status])
+  @@map("organization_memberships")
+}
+
+model Role {
+  @@rls
+
+  id              Uuid   @id @default(uuid())
+  name            String
+  description     String?
+  roleType        role_type @map("role_type")
+  organizationId  Uuid?  @map("organization_id")
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  isSystem        Boolean @default(false) @map("is_system")
+  createdAt       TimestamptzString(3) @default(now()) @map("created_at")
+  updatedAt       TimestamptzString(3) @default(now()) @map("updated_at")
+  userRoles       UserRole[]
+
+  @@index([organizationId, name], where: "(organization_id IS NOT NULL)", unique: true, name: "organization_role_name_unique")
+  @@index([name], where: "(organization_id IS NULL)", unique: true, name: "system_role_name_unique")
+  @@check(expression: "(role_type = 'SYSTEM' AND organization_id IS NULL AND is_system = true) OR (role_type = 'ORGANIZATION' AND is_system = false)", name: "role_scope_matches_type")
+  @@map("roles")
+}
+
+model Permission {
+  @@rls
+
+  id          Uuid   @id @default(uuid())
+  code        String @unique
+  description String?
+  createdAt   TimestamptzString(3) @default(now()) @map("created_at")
+
+  @@map("permissions")
+}
+
+model MembershipRole {
+  @@rls
+
+  id            Uuid   @id @default(uuid())
+  membershipId  Uuid   @map("membership_id")
+  membership    OrganizationMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  roleId        Uuid   @map("role_id")
+  role          Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  assignedAt    TimestamptzString(3) @default(now()) @map("assigned_at")
+  assignedById  Uuid?  @map("assigned_by_id")
+  assignedBy    User?  @relation(fields: [assignedById], references: [id], onDelete: SetNull)
+
+  @@unique([membershipId, roleId])
+  @@index([roleId])
+  @@map("membership_roles")
+}
+
+model UserRole {
+  @@rls
+
+  id           Uuid   @id @default(uuid())
+  userId       Uuid   @map("user_id")
+  user         User   @relation("UserRoleTarget", fields: [userId], references: [id], onDelete: Cascade)
+  roleId       Uuid   @map("role_id")
+  role         Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  assignedAt   TimestamptzString(3) @default(now()) @map("assigned_at")
+  assignedById Uuid?  @map("assigned_by_id")
+  assignedBy   User?  @relation("UserRoleAssigner", fields: [assignedById], references: [id], onDelete: SetNull)
+
+  @@unique([userId, roleId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  @@rls
+
+  id            Uuid   @id @default(uuid())
+  roleId        Uuid   @map("role_id")
+  role          Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permissionId  Uuid   @map("permission_id")
+  permission    Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  createdAt     TimestamptzString(3) @default(now()) @map("created_at")
+
+  @@unique([roleId, permissionId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+model SecurityEvent {
+  @@rls
+
+  id             Uuid   @id @default(uuid())
+  userId         Uuid?  @map("user_id")
+  user           User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  oauthClientId  Uuid?  @map("oauth_client_id")
+  oauthClient    OAuthClient? @relation(fields: [oauthClientId], references: [id], onDelete: SetNull)
+  sessionId      Uuid?  @map("session_id")
+  session        Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  eventType      security_event_type @map("event_type")
+  occurredAt     TimestamptzString(3) @default(now()) @map("occurred_at")
+  ipAddress      String? @map("ip_address")
+  userAgent      String? @map("user_agent")
+  // Store only redacted, non-secret event details; credentials and tokens never belong here.
+  metadata       Jsonb?
+
+  @@index([userId, occurredAt])
+  @@index([eventType, occurredAt])
+  @@index([oauthClientId, occurredAt])
+  @@map("security_events")
+}
+
+model LoginAttempt {
+  @@rls
+
+  id              Uuid   @id @default(uuid())
+  userId          Uuid?  @map("user_id")
+  user            User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  normalizedEmail String? @map("normalized_email")
+  result          login_attempt_result
+  reasonCode      String? @map("reason_code")
+  attemptedAt     TimestamptzString(3) @default(now()) @map("attempted_at")
+  ipAddress       String? @map("ip_address")
+  userAgent       String? @map("user_agent")
+
+  @@index([userId, attemptedAt])
+  @@index([normalizedEmail, attemptedAt])
+  @@index([ipAddress, attemptedAt])
+  @@map("login_attempts")
+}
+
+model AuditLog {
+  @@rls
+
+  id              Uuid   @id @default(uuid())
+  actorUserId     Uuid?  @map("actor_user_id")
+  actorUser       User?  @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  organizationId  Uuid?  @map("organization_id")
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  action          String
+  resourceType    String @map("resource_type")
+  resourceId      String? @map("resource_id")
+  occurredAt      TimestamptzString(3) @default(now()) @map("occurred_at")
+  ipAddress       String? @map("ip_address")
+  // Keep passwords, tokens, secrets, and credential material out of audit metadata.
+  metadata        Jsonb?
+
+  @@index([organizationId, occurredAt])
+  @@index([actorUserId, occurredAt])
+  @@index([resourceType, resourceId, occurredAt])
+  @@map("audit_logs")
+}
+
+model SecurityNotification {
+  @@rls
+
+  id          Uuid   @id @default(uuid())
+  userId      Uuid   @map("user_id")
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        security_notification_type
+  title       String
+  body        String?
+  createdAt   TimestamptzString(3) @default(now()) @map("created_at")
+  readAt      TimestamptzString(3)? @map("read_at")
+  metadata    Jsonb?
+
+  @@index([userId, readAt, createdAt])
+  @@map("security_notifications")
+}
+
+model OrganizationDomain {
+  @@rls
+
+  id             Uuid   @id @default(uuid())
+  organizationId Uuid   @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  domain         String @unique
+  verifiedAt     TimestamptzString(3)? @map("verified_at")
+  createdAt      TimestamptzString(3) @default(now()) @map("created_at")
+
+  @@index([organizationId, verifiedAt])
+  @@map("organization_domains")
+}
+
+model OrganizationSsoConnection {
+  @@rls
+
+  id                    Uuid   @id @default(uuid())
+  organizationId        Uuid   @map("organization_id")
+  organization          Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  protocol              organization_sso_protocol
+  issuerUrl             String @map("issuer_url")
+  clientId              String @map("client_id")
+  clientSecretCiphertext Bytes? @map("client_secret_ciphertext")
+  clientSecretNonce     Bytes? @map("client_secret_nonce")
+  clientSecretAuthTag   Bytes? @map("client_secret_auth_tag")
+  encryptedMetadata     Bytes? @map("encrypted_metadata")
+  metadataNonce         Bytes? @map("metadata_nonce")
+  metadataAuthTag       Bytes? @map("metadata_auth_tag")
+  metadataEncryptionKeyRef String? @map("metadata_encryption_key_ref")
+  encryptionKeyRef      String? @map("encryption_key_ref")
+  isEnabled             Boolean @default(false) @map("is_enabled")
+  createdAt             TimestamptzString(3) @default(now()) @map("created_at")
+  updatedAt             TimestamptzString(3) @default(now()) @map("updated_at")
+
+  @@check(expression: "(client_secret_ciphertext IS NULL AND client_secret_nonce IS NULL AND client_secret_auth_tag IS NULL AND encryption_key_ref IS NULL) OR (client_secret_ciphertext IS NOT NULL AND client_secret_nonce IS NOT NULL AND client_secret_auth_tag IS NOT NULL AND encryption_key_ref IS NOT NULL)", name: "sso_secret_encryption_fields_complete")
+  @@check(expression: "(encrypted_metadata IS NULL AND metadata_nonce IS NULL AND metadata_auth_tag IS NULL AND metadata_encryption_key_ref IS NULL) OR (encrypted_metadata IS NOT NULL AND metadata_nonce IS NOT NULL AND metadata_auth_tag IS NOT NULL AND metadata_encryption_key_ref IS NOT NULL)", name: "sso_metadata_encryption_fields_complete")
+  @@unique([organizationId, issuerUrl])
+  @@index([organizationId, isEnabled], name: "org_sso_enabled")
+  @@map("organization_sso_connections")
+}

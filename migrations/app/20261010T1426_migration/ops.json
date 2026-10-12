@@ -1,0 +1,170 @@
+[
+  {
+    "id": "dropCheckConstraint.roles.role_scope_matches_type_0cc457ef",
+    "label": "Drop check constraint \"role_scope_matches_type_0cc457ef\" on \"roles\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "role_scope_matches_type_0cc457ef",
+        "table": "roles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"role_scope_matches_type_0cc457ef\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "role_scope_matches_type_0cc457ef",
+          "public",
+          "\"public\".\"roles\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop check constraint \"role_scope_matches_type_0cc457ef\"",
+        "sql": "ALTER TABLE \"public\".\"roles\" DROP CONSTRAINT \"role_scope_matches_type_0cc457ef\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"role_scope_matches_type_0cc457ef\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "role_scope_matches_type_0cc457ef",
+          "public",
+          "\"public\".\"roles\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dropCheckConstraint.security_events.security_events_event_type_check_20f82758",
+    "label": "Drop check constraint \"security_events_event_type_check_20f82758\" on \"security_events\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "security_events_event_type_check_20f82758",
+        "table": "security_events"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"security_events_event_type_check_20f82758\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "security_events_event_type_check_20f82758",
+          "public",
+          "\"public\".\"security_events\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop check constraint \"security_events_event_type_check_20f82758\"",
+        "sql": "ALTER TABLE \"public\".\"security_events\" DROP CONSTRAINT \"security_events_event_type_check_20f82758\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"security_events_event_type_check_20f82758\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "security_events_event_type_check_20f82758",
+          "public",
+          "\"public\".\"security_events\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.roles.role_scope_matches_type_2e1823df",
+    "label": "Add check constraint \"role_scope_matches_type_2e1823df\" on \"roles\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "role_scope_matches_type_2e1823df",
+        "table": "roles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"role_scope_matches_type_2e1823df\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "role_scope_matches_type_2e1823df",
+          "public",
+          "\"public\".\"roles\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"role_scope_matches_type_2e1823df\"",
+        "sql": "ALTER TABLE \"public\".\"roles\" ADD CONSTRAINT \"role_scope_matches_type_2e1823df\" CHECK ((role_type = 'SYSTEM' AND organization_id IS NULL AND is_system = true) OR (role_type = 'ORGANIZATION' AND is_system = false))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"role_scope_matches_type_2e1823df\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "role_scope_matches_type_2e1823df",
+          "public",
+          "\"public\".\"roles\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.security_events.security_events_event_type_check_3c3cef8b",
+    "label": "Add check constraint \"security_events_event_type_check_3c3cef8b\" on \"security_events\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "security_events_event_type_check_3c3cef8b",
+        "table": "security_events"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"security_events_event_type_check_3c3cef8b\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "security_events_event_type_check_3c3cef8b",
+          "public",
+          "\"public\".\"security_events\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"security_events_event_type_check_3c3cef8b\"",
+        "sql": "ALTER TABLE \"public\".\"security_events\" ADD CONSTRAINT \"security_events_event_type_check_3c3cef8b\" CHECK (\"event_type\" IN ('ACCOUNT_CREATED', 'EMAIL_ADDED', 'EMAIL_REMOVED', 'EMAIL_VERIFIED', 'PRIMARY_EMAIL_CHANGED', 'USERNAME_CHANGED', 'PROFILE_UPDATED', 'ACCOUNT_ACTIVATED', 'ACCOUNT_SUSPENDED', 'ACCOUNT_REACTIVATED', 'ACCOUNT_DEACTIVATED', 'LOGIN_SUCCESS', 'LOGIN_FAILED', 'LOGOUT', 'PASSWORD_CHANGED', 'PASSWORD_RESET', 'PASSKEY_ADDED', 'PASSKEY_REMOVED', 'TOTP_ENABLED', 'TOTP_DISABLED', 'RECOVERY_CODE_USED', 'OAUTH_AUTHORIZED', 'OAUTH_REVOKED', 'SESSION_CREATED', 'SESSION_REVOKED', 'API_KEY_CREATED', 'API_KEY_REVOKED', 'ACCOUNT_RECOVERY_STARTED', 'ACCOUNT_RECOVERY_COMPLETED'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"security_events_event_type_check_3c3cef8b\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "security_events_event_type_check_3c3cef8b",
+          "public",
+          "\"public\".\"security_events\""
+        ]
+      }
+    ]
+  }
+]

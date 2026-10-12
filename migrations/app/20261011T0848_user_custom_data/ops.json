@@ -1,0 +1,44 @@
+[
+  {
+    "id": "column.public.profiles.custom_data",
+    "label": "Add column \"custom_data\" to \"profiles\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "custom_data",
+        "table": "profiles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"custom_data\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "profiles",
+          "custom_data"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"custom_data\"",
+        "sql": "ALTER TABLE \"public\".\"profiles\" ADD COLUMN \"custom_data\" jsonb"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"custom_data\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "profiles",
+          "custom_data"
+        ]
+      }
+    ]
+  }
+]

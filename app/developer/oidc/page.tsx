@@ -1,0 +1,4 @@
+"use client";
+import { AuthenticatedShell } from "../../components/AuthenticatedShell";
+import { PageHeading, Panel } from "../../components/PortalUI";
+export default function Page(){return <AuthenticatedShell activeLabel="OIDC" activePath="/developer/oidc"><PageHeading eyebrow="OPENID CONNECT" title="OIDC configuration" description="Expected endpoints include discovery, authorization, token, UserInfo, JWKS, revocation, and optional introspection."/><Panel title="Implementation status"><p>This page describes the intended contract; do not configure external clients until the discovery document and endpoint flows are verified in the deployed environment.</p></Panel></AuthenticatedShell>}
