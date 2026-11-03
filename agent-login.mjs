@@ -10,7 +10,7 @@ import { URL } from "node:url";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 
-const DEFAULT_CLIENT_ID = "oa_jveGzDNEj0by9neUceFrElkYfvGZHq4f";
+const DEFAULT_CLIENT_ID = "oa_8WSUjKeAT6CaaJLdZ1Lsr-oHu-ow3LHT";
 const DEFAULT_ISSUER = "https://turbo-train-696qp5w5x4grh45qx-3001.app.github.dev";
 const DEFAULT_REDIRECT = "http://localhost:8765/callback";
 const DEFAULT_SCOPES = "openid tunnel:manage";
@@ -62,7 +62,7 @@ try {
   const scopeList = [...new Set(scopes.split(/\s+/).filter(Boolean))];
   if (!scopeList.includes("openid")) throw new Error("Include openid so OneAuth can resolve the identity resource.");
   if (!scopeList.includes("tunnel:manage")) {
-    console.log("Note: tunnel:manage is not requested; this login won't authorize Agent tunnel provisioning.");
+    console.log("Note: tunnel:manage is not requested; this login will not authorize Agent hostname provisioning.");
   }
 
   const state = randomToken(24);

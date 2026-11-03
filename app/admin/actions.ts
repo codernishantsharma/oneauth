@@ -361,38 +361,26 @@ export async function updateAdminUserProfile(input: {
   return { success: true };
 }
 
-
-/** Move all active Agent hostname assignments onto the configured shared tunnel. */
-export async function migrateAgentTunnelsToSharedGateway() {
+export async function assignAdminAgentDomain(userId: string) {
   await requireAdminUser();
-  const sharedTunnelId = "05da5c33-2dfa-4473-b576-d3b2fb28754f";
+  if (!/^[0-9a-f-]{36}$/i.test(userId)) throw new Error("INVALID_USER_ID");
+  const user = await db.runtime().query(db.raw.sql`SELECT u.id, p.username
+    FROM public.users u LEFT JOIN public.profiles p ON p.user_id=u.id
+    WHERE u.id=${userId}::uuid AND u.status='ACTIVE' LIMIT 1`
+    .returnsRow({ id: "pg/uuid@1", username: "pg/text@1" }).build());
+  if (!user.length) throw new Error("ACTIVE_USER_NOT_FOUND");
+  const { ensureAgentDomain } = await import("@/src/lib/agent-domains/provision");
+  const domain = await ensureAgentDomain(userId, user[0].username ?? null);
+  return { success: true, hostname: domain.hostname };
+}
 
-  // Remove the old one-tunnel-per-user uniqueness rule; multiple users now
-  // legitimately share one tunnel while each hostname remains unique.
-  await db.runtime().query(db.raw.sql`
-    ALTER TABLE public.agent_tunnels DROP CONSTRAINT IF EXISTS agent_tunnels_tunnel_id_key
-  `.returnsRow({ ok: "pg/bool@1" }).build());
-  await db.runtime().query(db.raw.sql`
-    DROP INDEX IF EXISTS public.agent_tunnels_tunnel_id_key
-  `.returnsRow({ ok: "pg/bool@1" }).build());
-
-  const migrated = await db.runtime().query(db.raw.sql`
-    UPDATE public.agent_tunnels
-    SET tunnel_id=${sharedTunnelId}, updated_at=now()
-    WHERE status='ACTIVE' AND tunnel_id <> ${sharedTunnelId}
-    RETURNING id
-  `.returnsRow({ id: "pg/uuid@1" }).build());
-
-  await db.runtime().query(db.raw.sql`
-    CREATE INDEX IF NOT EXISTS agent_tunnels_shared_tunnel_idx
-    ON public.agent_tunnels(tunnel_id) WHERE status='ACTIVE'
-  `.returnsRow({ ok: "pg/bool@1" }).build());
-
-  const remaining = await db.runtime().query(db.raw.sql`
-    SELECT count(*)::int4 AS count FROM public.agent_tunnels
-    WHERE status='ACTIVE' AND tunnel_id <> ${sharedTunnelId}
-  `.returnsRow({ count: "pg/int4@1" }).build());
-  if (remaining[0]?.count !== 0) throw new Error("AGENT_TUNNEL_MIGRATION_VERIFICATION_FAILED");
-
-  return { success: true, migratedCount: migrated.length, sharedTunnelId };
+export async function removeAdminAgentDomain(domainId: string) {
+  await requireAdminUser();
+  if (!/^[0-9a-f-]{36}$/i.test(domainId)) throw new Error("INVALID_DOMAIN_ID");
+  const result = await db.runtime().query(db.raw.sql`UPDATE public.agent_domains
+    SET status='DELETED', deleted_at=now(), updated_at=now()
+    WHERE id=${domainId}::uuid AND status='ACTIVE' RETURNING id`
+    .returnsRow({ id: "pg/uuid@1" }).build());
+  if (!result.length) throw new Error("ACTIVE_DOMAIN_NOT_FOUND");
+  return { success: true };
 }

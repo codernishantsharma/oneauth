@@ -2,7 +2,6 @@ import { db } from "@/src/prisma/db";
 import { requireAdminUser } from "@/src/lib/auth/admin";
 import { AuthenticatedShell } from "../components/AuthenticatedShell";
 import { MetricCard, PageHeading } from "../components/PortalUI";
-import { SharedTunnelMigration } from "./SharedTunnelMigration";
 
 export const dynamic = "force-dynamic";
 
@@ -14,29 +13,7 @@ type AdminStats = {
   recentSecurityEvents: number;
 };
 
-type AdminTunnelRow = {
-  id: string;
-  userId: string;
-  email: string | null;
-  displayName: string | null;
-  username: string | null;
-  hostname: string;
-  localPort: number;
-  status: string;
-  createdAt: Date | string;
-  lastUsedAt: Date | string;
-};
-
-type AdminUserRow = {
-  id: string;
-  email: string | null;
-  displayName: string | null;
-  username: string | null;
-  status: string;
-  createdAt: Date | string;
-};
-
-async function getAdminData(): Promise<{ stats: AdminStats; users: AdminUserRow[]; tunnels: AdminTunnelRow[] }> {
+async function getAdminData(): Promise<{ stats: AdminStats }> {
   const statsQuery = db.raw.sql`SELECT
     (SELECT count(*)::int4 FROM public.users WHERE status <> 'DELETED') AS users,
     (SELECT count(*)::int4 FROM public.users WHERE status = 'ACTIVE') AS active_users,
@@ -62,7 +39,7 @@ async function getAdminData(): Promise<{ stats: AdminStats; users: AdminUserRow[
     LEFT JOIN public.email_addresses e ON e.user_id = u.id AND e.is_primary = true
     WHERE u.status <> 'DELETED'
     ORDER BY u.created_at DESC
-    LIMIT 10`.returnsRow({
+    LIMIT 500`.returnsRow({
       id: "pg/uuid@1",
       email: "pg/text@1",
       displayName: "pg/text@1",
@@ -71,10 +48,10 @@ async function getAdminData(): Promise<{ stats: AdminStats; users: AdminUserRow[
       createdAt: "pg/timestamptz-date@1",
     }).build();
 
-  const tunnelsQuery = db.raw.sql`SELECT t.id, t.user_id AS "userId",
+  const domainsQuery = db.raw.sql`SELECT t.id, t.user_id AS "userId",
       e.normalized_email AS email, p.display_name AS "displayName", p.username,
       t.hostname, t.local_port AS "localPort", t.status, t.created_at AS "createdAt", t.last_used_at AS "lastUsedAt"
-    FROM public.agent_tunnels t
+    FROM public.agent_domains t
     JOIN public.users u ON u.id = t.user_id
     LEFT JOIN public.profiles p ON p.user_id = u.id
     LEFT JOIN public.email_addresses e ON e.user_id = u.id AND e.is_primary = true
@@ -92,11 +69,7 @@ async function getAdminData(): Promise<{ stats: AdminStats; users: AdminUserRow[
       lastUsedAt: "pg/timestamptz-date@1",
     }).build();
 
-  const [statsRows, users, tunnels] = await Promise.all([
-    db.runtime().query(statsQuery),
-    db.runtime().query(usersQuery),
-    db.runtime().query(tunnelsQuery),
-  ]);
+  const [statsRows] = await Promise.all([db.runtime().query(statsQuery)]);
   const row = statsRows[0];
   if (!row) throw new Error("ADMIN_DASHBOARD_UNAVAILABLE");
 
@@ -108,18 +81,9 @@ async function getAdminData(): Promise<{ stats: AdminStats; users: AdminUserRow[
       oauthClients: row.oauth_clients,
       recentSecurityEvents: row.recent_security_events,
     },
-    users: users as AdminUserRow[],
-    tunnels: tunnels as AdminTunnelRow[],
   };
 }
 
-
-function formatAdminDate(value: Date | string) {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime())
-    ? "—"
-    : new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
-}
 
 export default async function AdminPage() {
   const user = await requireAdminUser();
@@ -153,36 +117,6 @@ export default async function AdminPage() {
         <MetricCard detail="Events in the last 24 hours" icon="activity" label="Recent security events" value={String(data.stats.recentSecurityEvents)} />
       </div>
 
-      <section aria-labelledby="agent-domains-heading" className="portal-card admin-management-panel admin-section-anchor" id="agent-domains">
-        <SharedTunnelMigration activeCount={data.tunnels.filter((tunnel) => tunnel.status === "ACTIVE").length} />
-        <div className="admin-management-heading">
-          <div>
-            <p className="portal-eyebrow">VORTIQLABS AGENT</p>
-            <h2 id="agent-domains-heading">Assigned tunnel domains</h2>
-            <p>View the public hostname assigned to each Agent installation.</p>
-          </div>
-          <span className="admin-count">{data.tunnels.filter((tunnel) => tunnel.status === "ACTIVE").length} active</span>
-        </div>
-        <div className="admin-users-table-wrap">
-          <table className="admin-users-table">
-            <thead><tr><th>User</th><th>Assigned domain</th><th>Local port</th><th>Status</th><th>Last used</th><th>Assigned</th></tr></thead>
-            <tbody>
-              {data.tunnels.map((tunnel) => (
-                <tr key={tunnel.id}>
-                  <td><strong>{tunnel.displayName || tunnel.username || tunnel.email || tunnel.userId}</strong><span>{tunnel.email || (tunnel.username ? `@${tunnel.username}` : tunnel.userId)}</span></td>
-                  <td><a href={`https://${tunnel.hostname}`} rel="noreferrer" target="_blank">{tunnel.hostname}</a></td>
-                  <td><code>{tunnel.localPort}</code></td>
-                  <td><span className={`admin-status ${tunnel.status === "ACTIVE" ? "admin-status-active" : "admin-status-suspended"}`}>{tunnel.status}</span></td>
-                  <td>{formatAdminDate(tunnel.lastUsedAt)}</td>
-                  <td>{formatAdminDate(tunnel.createdAt)}</td>
-                </tr>
-              ))}
-              {!data.tunnels.length ? <tr><td colSpan={6}>No Agent tunnel domains have been assigned yet.</td></tr> : null}
-            </tbody>
-          </table>
-        </div>
-        <p className="admin-table-footnote">Showing up to 100 most recently used tunnel assignments. Local port is the port reported by the Agent extension; it must match the port the extension actually listens on.</p>
-      </section>
 
       <p className="admin-access-note">Signed in as {user.email}. Admin access is controlled server-side by the ONEAUTH_ADMIN_EMAILS environment variable.</p>
     </AuthenticatedShell>

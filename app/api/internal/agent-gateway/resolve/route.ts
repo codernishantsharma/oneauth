@@ -1,6 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
 import { db } from "@/src/prisma/db";
-import { SHARED_AGENT_TUNNEL_ID } from "@/src/lib/tunnels/cloudflare";
 
 export const runtime = "nodejs";
 const NO_STORE = { "Cache-Control": "no-store", Pragma: "no-cache" };
@@ -35,7 +34,7 @@ export async function POST(request: Request) {
   }
 
   const hostname = rawHostname.trim().toLowerCase().replace(/\.$/, "");
-  const domain = (process.env.CLOUDFLARE_TUNNEL_DOMAIN ?? "nishantapps.in").trim().toLowerCase();
+  const domain = (process.env.AGENT_GATEWAY_BASE_DOMAIN ?? "mcp.nishantapps.in").trim().toLowerCase();
   const managedPrefix = hostname.endsWith("." + domain)
     ? hostname.slice(0, -(domain.length + 1))
     : "";
@@ -47,9 +46,8 @@ export async function POST(request: Request) {
   try {
     const rows = await db.runtime().query(db.raw.sql`
       SELECT id, user_id AS "userId", hostname, status
-      FROM public.agent_tunnels
+      FROM public.agent_domains
       WHERE hostname=${hostname}
-        AND tunnel_id=${SHARED_AGENT_TUNNEL_ID}
         AND status='ACTIVE'
         AND deleted_at IS NULL
       LIMIT 1

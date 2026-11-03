@@ -14,6 +14,7 @@ const adminNavigation = [
       { href: "/admin/users", activePath: "/admin/users", label: "User Management", icon: "user-round" },
       { href: "/admin/roles", activePath: "/admin/roles", label: "Roles & Permissions", icon: "shield-check" },
       { href: "/admin/notifications", activePath: "/admin/notifications", label: "Notifications", icon: "bell" },
+      { href: "/admin/mcp-urls", activePath: "/admin/mcp-urls", label: "MCP URLs", icon: "network" },
     ],
   },
   {

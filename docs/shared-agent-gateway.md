@@ -1,45 +1,13 @@
-# Shared Agent tunnel gateway
+# MCP Mesh gateway and OneAuth hostname registry
 
-The Cloudflare Tunnel is shared by all active Agent hostname records. The wildcard
-ingress sends matching hostnames to the OneAuth gateway origin, while explicit
-ingress rules for unrelated applications must remain ahead of the broad wildcard.
+OneAuth owns durable hostname-to-user assignments in `public.agent_domains`; MCP Mesh owns the live connection registry and request data plane. Configure wildcard DNS `*.mcp.nishantapps.in` to the public MCP Mesh gateway.
 
 ## Private hostname resolver
 
-The gateway/broker may resolve a requested hostname by calling:
+`POST /api/internal/agent-gateway/resolve` accepts `Authorization: Bearer <AGENT_GATEWAY_SHARED_SECRET>` and JSON `{ "hostname": "mcp-example123.mcp.nishantapps.in" }`. It returns `agentId`, `userId`, `hostname`, and `status` only for an exact active assignment. Responses are non-cacheable.
 
-`POST /api/internal/agent-gateway/resolve`
+## Routing model
 
-Headers:
+Each desktop Agent establishes an authenticated outbound persistent WebSocket to MCP Mesh. The gateway binds that live connection to the authenticated OneAuth identity, resolves incoming hostnames against OneAuth, and forwards MCP requests over the matching live WebSocket. There is no local port or localhost forwarding. A client must never choose an arbitrary user ID, Agent ID, or connection target. On disconnect, the gateway marks the Agent offline and rejects requests until it reconnects and reauthenticates.
 
-`Authorization: Bearer <AGENT_GATEWAY_SHARED_SECRET>`
-`Content-Type: application/json`
-
-Body:
-
-```json
-{ "hostname": "mcp-example123.nishantapps.in" }
-```
-
-The resolver returns an `agentId`, `userId`, `hostname`, and `status` only for an
-exact active registry row on the configured shared tunnel. It returns 401 without
-the internal secret, 404 for malformed/unregistered/deleted hostnames, and 503 if
-the registry is unavailable. Responses are non-cacheable.
-
-Set `AGENT_GATEWAY_SHARED_SECRET` to a high-entropy secret shared only between
-OneAuth and the gateway process. Do not expose it to browser clients or the VS Code
-extension. Rotate it on both services together.
-
-## Important routing boundary
-
-The resolver is the authorization/identity lookup, not a data-plane proxy. The
-VS Code Agent runs on the user's computer; a `127.0.0.1:<port>` URL on the OneAuth
-server cannot reach that computer. End-to-end routing requires each extension to
-establish an authenticated outbound persistent connection to the gateway/broker,
-and the broker to associate that live connection with the authenticated user ID.
-The gateway must authorize the requested hostname against the resolver result
-before forwarding traffic, and must never let a client choose another user's
-connection or target by supplying an arbitrary user ID or port.
-
-The Cloudflare ingress configurator preserves existing explicit rules and replaces
-only the managed broad wildcard and catch-all 404 entries.
+`AGENT_GATEWAY_SHARED_SECRET` is server-to-server only. Rotate it on OneAuth and MCP Mesh together.

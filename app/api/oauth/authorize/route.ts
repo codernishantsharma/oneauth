@@ -6,7 +6,7 @@ import { findClient, validRedirectUri, hashOpaqueToken, getClientScopes } from "
 import { allowOAuthRequest, rateLimitedResponse } from "@/src/lib/oauth/rate-limit";
 import { getIssuer, getOidcKey } from "@/src/lib/oauth/oidc";
 import { resolveOAuthResource } from "@/src/lib/oauth/resource";
-import { ensureAgentTunnel } from "@/src/lib/tunnels/provision";
+import { ensureAgentDomain } from "@/src/lib/agent-domains/provision";
 
 import { isValidOAuthState, isValidOidcNonce, isValidPkceChallenge, parseRequestedScopes, isCustomDataReadScope } from "@/src/lib/oauth/validation";
 
@@ -137,7 +137,7 @@ export async function POST(request: Request) {
     }
     // Provision once, after this user approves the registered Agent client.
     if (client.clientId === "oa_jveGzDNEj0by9neUceFrElkYfvGZHq4f" && scopes.includes("tunnel:manage")) {
-      await ensureAgentTunnel(user.id, user.username);
+      await ensureAgentDomain(user.id, user.username);
     }
     const rawCode = randomBytes(32).toString("base64url");
     await db.runtime().query(db.raw.sql`INSERT INTO public.authorization_codes (id,code_hash,oauth_client_id,user_id,redirect_uri,pkce_challenge,pkce_challenge_method,scopes,nonce,resource,expires_at,issued_at) VALUES (${randomUUID()}::uuid,${hashOpaqueToken(rawCode)},${client.id}::uuid,${user.id}::uuid,${redirectUri},${challenge},'S256',string_to_array(${scopes.join(" ")},' '),NULLIF(${nonce},''),${resource},now()+interval '5 minutes',now()) RETURNING id`.returnsRow({ id: "pg/uuid@1" }).build());

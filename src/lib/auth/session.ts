@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getUserFromSession, type StoredAccount } from "@/src/lib/auth/account-store";
@@ -15,6 +15,11 @@ export async function getCurrentUser(): Promise<StoredAccount | null> {
 
 export async function requireCurrentUser(): Promise<StoredAccount> {
   const user = await getCurrentUser();
-  if (!user) redirect("/");
+  if (!user) {
+    const requestHeaders = await headers();
+    const requested = requestHeaders.get("x-oneauth-pathname");
+    const destination = requested && requested.startsWith("/") && !requested.startsWith("//") ? requested : "/dashboard";
+    redirect("/?redirect=" + encodeURIComponent(destination));
+  }
   return user;
 }

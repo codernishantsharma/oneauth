@@ -5,6 +5,7 @@ import { createSessionForUser, findAccountById, findAccountByEmail, verifyCreden
 import { SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from "@/src/lib/auth/session";
 import { validateEmail } from "@/src/lib/identity/identity.validation";
 import { writeSecurityEvent } from "@/src/lib/auth/security-events";
+import { safeRedirectPath } from "@/src/lib/auth/redirect";
 import { hasTotpEnabled, verifyTotpForLogin } from "@/src/lib/auth/security-settings";
 import { deleteTemporaryValue, getTemporaryValue, setTemporaryValue } from "@/src/lib/redis/temporary";
 
@@ -16,7 +17,7 @@ function challengeKey(token: string) {
   return MFA_CHALLENGE_PREFIX + createHash("sha256").update(token).digest("hex");
 }
 
-async function completeLogin(request: Request, userId: string, method: "PASSWORD" | "TOTP" | "RECOVERY_CODE") {
+async function completeLogin(request: Request, userId: string, method: "PASSWORD" | "TOTP" | "RECOVERY_CODE", redirectTo: string | null) {
   const user = await findAccountById(userId);
   if (!user || user.status !== "ACTIVE" || !user.verifiedAt) {
     return NextResponse.json({ error: "This account is not available for sign-in." }, { status: 403 });
@@ -28,7 +29,7 @@ async function completeLogin(request: Request, userId: string, method: "PASSWORD
   });
   await writeSecurityEvent({ userId: user.id, eventType: "LOGIN_SUCCESS", headers: request.headers, metadata: { method } });
   await writeSecurityEvent({ userId: user.id, eventType: "SESSION_CREATED", headers: request.headers, metadata: { expiresAt: session.expiresAt } });
-  const response = NextResponse.json({ ok: true, userId: user.id, email: user.email, username: user.username });
+  const response = NextResponse.json({ ok: true, userId: user.id, email: user.email, username: user.username, redirect: redirectTo ?? "/dashboard" });
   response.cookies.set(SESSION_COOKIE_NAME, session.id, {
     httpOnly: true,
     sameSite: "lax",
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const mfaChallenge = String(formData.get("mfaChallenge") ?? "").trim();
+    const redirectTo = safeRedirectPath(formData.get("redirect"));
 
     if (mfaChallenge) {
       const code = String(formData.get("mfaCode") ?? "").trim();
@@ -80,7 +82,7 @@ export async function POST(request: Request) {
       await deleteTemporaryValue(key);
       const normalizedCode = code.replace(/[ -]/g, "");
       const method = /^\d{6}$/.test(normalizedCode) ? "TOTP" : "RECOVERY_CODE";
-      return completeLogin(request, challenge.userId, method);
+      return completeLogin(request, challenge.userId, method, redirectTo);
     }
 
     const email = String(formData.get("email") ?? "").trim();
@@ -108,7 +110,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ requiresTwoFactor: true, challenge });
     }
 
-    return completeLogin(request, user.id, "PASSWORD");
+    return completeLogin(request, user.id, "PASSWORD", redirectTo);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to sign in.";
     if (message === "INVALID_EMAIL") {

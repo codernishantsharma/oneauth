@@ -9,13 +9,13 @@ export async function POST(request: Request) {
     return Response.json({ error: "unauthorized" }, { status: 401, headers: { "Cache-Control": "no-store" } });
   }
 
-  // Hostnames are registry entries on one shared tunnel. Expiring a user's URL
-  // must never delete the shared Cloudflare tunnel or a shared wildcard DNS record.
+  // Expire only the database hostname assignment. DNS records and gateway
+  // infrastructure are managed independently and are never changed here.
   const expired = await db.runtime().query(db.raw.sql`
-    UPDATE public.agent_tunnels
+    UPDATE public.agent_domains
     SET status='DELETED', deleted_at=now(), updated_at=now()
     WHERE id IN (
-      SELECT id FROM public.agent_tunnels
+      SELECT id FROM public.agent_domains
       WHERE status='ACTIVE' AND last_used_at < now() - interval '60 days'
       ORDER BY last_used_at ASC LIMIT 100
     )
