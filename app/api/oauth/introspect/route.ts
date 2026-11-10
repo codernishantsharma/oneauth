@@ -45,10 +45,14 @@ export async function POST(request: Request) {
     } catch { return oauthError("temporarily_unavailable", 503); }
 
     const form = await request.formData();
-    const client = await authenticateClient(request, form);
-    if (!client) return oauthError("invalid_client", 401);
+    const expectedResource = (process.env.ONEAUTH_MCP_RESOURCE_URL ?? "").trim().replace(/\/+$/, "");
+    const suppliedResourceKey = request.headers.get("x-oneauth-resource-server-key") ?? "";
+    const configuredResourceKey = process.env.ONEAUTH_MCP_RESOURCE_SERVER_KEY ?? "";
+    const isResourceServer = Boolean(expectedResource && configuredResourceKey && suppliedResourceKey && safeEqual(suppliedResourceKey, configuredResourceKey));
+    const client = isResourceServer ? null : await authenticateClient(request, form);
+    if (!client && !isResourceServer) return oauthError("invalid_client", 401);
     try {
-      if (!(await allowOAuthRequest(request, `introspect:${client.clientId}`, 120, 60))) return oauthError("temporarily_unavailable", 429);
+      if (!(await allowOAuthRequest(request, `introspect:${isResourceServer ? "mcp-resource-server" : client!.clientId}`, 120, 60))) return oauthError("temporarily_unavailable", 429);
     } catch { return oauthError("temporarily_unavailable", 503); }
 
     const token = String(form.get("token") ?? "");
@@ -59,16 +63,16 @@ export async function POST(request: Request) {
     const hash = hashOpaqueToken(token);
     const inactive = Response.json({ active: false }, { headers: { "Cache-Control": "no-store", Pragma: "no-cache" } });
     if (hint !== "refresh_token") {
-      const rows = await db.runtime().query(db.raw.sql`SELECT t.user_id AS "userId",array_to_string(t.scopes,' ') AS scopes,t.resource,t.issued_at AS "issuedAt",t.expires_at AS "expiresAt",t.revoked_at AS "revokedAt",u.status AS "userStatus",u.deleted_at AS "userDeleted",c.is_active AS "clientActive",c.deleted_at AS "clientDeleted",c.environment,o.status AS "orgStatus",o.deleted_at AS "orgDeleted" FROM public.access_tokens t JOIN public.users u ON u.id=t.user_id JOIN public.oauth_clients c ON c.id=t.oauth_client_id LEFT JOIN public.organizations o ON o.id=c.organization_id WHERE t.token_hash=${hash} AND t.oauth_client_id=${client.id}::uuid LIMIT 1`.returnsRow({userId:"pg/uuid@1",scopes:"pg/text@1",resource:"pg/text@1",issuedAt:"pg/timestamptz-string@1",expiresAt:"pg/timestamptz-string@1",revokedAt:"pg/timestamptz-string@1",userStatus:"pg/text@1",userDeleted:"pg/timestamptz-string@1",clientActive:"pg/bool@1",clientDeleted:"pg/timestamptz-string@1",environment:"pg/text@1",orgStatus:"pg/text@1",orgDeleted:"pg/timestamptz-string@1"}).build());
+      const rows = await db.runtime().query(db.raw.sql`SELECT t.user_id AS "userId",array_to_string(t.scopes,' ') AS scopes,t.resource,t.issued_at AS "issuedAt",t.expires_at AS "expiresAt",t.revoked_at AS "revokedAt",u.status AS "userStatus",u.deleted_at AS "userDeleted",c.is_active AS "clientActive",c.deleted_at AS "clientDeleted",c.environment,o.status AS "orgStatus",o.deleted_at AS "orgDeleted" FROM public.access_tokens t JOIN public.users u ON u.id=t.user_id JOIN public.oauth_clients c ON c.id=t.oauth_client_id LEFT JOIN public.organizations o ON o.id=c.organization_id WHERE t.token_hash=${hash} AND (${isResourceServer} OR t.oauth_client_id=${client?.id ?? "00000000-0000-0000-0000-000000000000"}::uuid) LIMIT 1`.returnsRow({userId:"pg/uuid@1",scopes:"pg/text@1",resource:"pg/text@1",issuedAt:"pg/timestamptz-string@1",expiresAt:"pg/timestamptz-string@1",revokedAt:"pg/timestamptz-string@1",userStatus:"pg/text@1",userDeleted:"pg/timestamptz-string@1",clientActive:"pg/bool@1",clientDeleted:"pg/timestamptz-string@1",environment:"pg/text@1",orgStatus:"pg/text@1",orgDeleted:"pg/timestamptz-string@1"}).build());
       const row = rows[0];
-      if (row && !row.revokedAt && row.userStatus === "ACTIVE" && !row.userDeleted && row.clientActive && !row.clientDeleted && (!row.orgStatus || row.orgStatus === "ACTIVE") && !row.orgDeleted && new Date(row.expiresAt).getTime() > Date.now()) {
+      if (row && (!isResourceServer || row.resource === expectedResource) && !row.revokedAt && row.userStatus === "ACTIVE" && !row.userDeleted && row.clientActive && !row.clientDeleted && (!row.orgStatus || row.orgStatus === "ACTIVE") && !row.orgDeleted && new Date(row.expiresAt).getTime() > Date.now()) {
         const scopes = typeof row.scopes === "string" ? row.scopes.split(" ").filter(Boolean) : [];
-        return Response.json({ active: true, client_id: client.clientId, sub: row.userId, scope: scopes.join(" "), aud: row.resource, iss: getIssuer(), iat: Math.floor(new Date(row.issuedAt).getTime() / 1000), exp: Math.floor(new Date(row.expiresAt).getTime() / 1000), token_type: "Bearer" }, { headers: { "Cache-Control": "no-store", Pragma: "no-cache" } });
+        return Response.json({ active: true, client_id: client?.clientId ?? "mcp-resource-server", sub: row.userId, scope: scopes.join(" "), aud: row.resource, iss: getIssuer(), iat: Math.floor(new Date(row.issuedAt).getTime() / 1000), exp: Math.floor(new Date(row.expiresAt).getTime() / 1000), token_type: "Bearer" }, { headers: { "Cache-Control": "no-store", Pragma: "no-cache" } });
       }
       if (hint === "access_token") return inactive;
     }
 
-    if (hint !== "access_token") {
+    if (hint !== "access_token" && !isResourceServer && client) {
       const rows = await db.runtime().query(db.raw.sql`SELECT t.user_id AS "userId",array_to_string(t.scopes,' ') AS scopes,t.resource,t.issued_at AS "issuedAt",t.expires_at AS "expiresAt",t.revoked_at AS "revokedAt",u.status AS "userStatus",u.deleted_at AS "userDeleted",c.is_active AS "clientActive",c.deleted_at AS "clientDeleted",c.environment,o.status AS "orgStatus",o.deleted_at AS "orgDeleted" FROM public.refresh_tokens t LEFT JOIN public.users u ON u.id=t.user_id JOIN public.oauth_clients c ON c.id=t.oauth_client_id LEFT JOIN public.organizations o ON o.id=c.organization_id WHERE t.token_hash=${hash} AND t.oauth_client_id=${client.id}::uuid LIMIT 1`.returnsRow({userId:"pg/uuid@1",scopes:"pg/text@1",resource:"pg/text@1",issuedAt:"pg/timestamptz-string@1",expiresAt:"pg/timestamptz-string@1",revokedAt:"pg/timestamptz-string@1",userStatus:"pg/text@1",userDeleted:"pg/timestamptz-string@1",clientActive:"pg/bool@1",clientDeleted:"pg/timestamptz-string@1",environment:"pg/text@1",orgStatus:"pg/text@1",orgDeleted:"pg/timestamptz-string@1"}).build());
       const row = rows[0];
       if (row && !row.revokedAt && row.userStatus === "ACTIVE" && !row.userDeleted && row.clientActive && !row.clientDeleted && (!row.orgStatus || row.orgStatus === "ACTIVE") && !row.orgDeleted && new Date(row.expiresAt).getTime() > Date.now()) {
