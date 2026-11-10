@@ -314,3 +314,16 @@ Reload the authorization URL and submit the new consent form once. Do not reuse 
 - Store credentials in a secret manager and rotate/revoke compromised credentials.
 - Use TLS in production; do not expose development servers or test callbacks with real credentials.
 - Before release, run npm test, npx tsc --noEmit, and npm run build.
+
+## 15. External MCP resource servers (MCP Mesh)
+
+OneAuth can authorize a separately hosted MCP resource server without changing the built-in `/api/mcp` audience. Configure these server-side environment variables on OneAuth:
+
+- `ONEAUTH_MCP_RESOURCE_URL`: the exact canonical HTTPS resource URI advertised by the external MCP server (for example, `https://mcp.nishantapps.in/mcp`).
+- `ONEAUTH_MCP_RESOURCE_SERVER_KEY`: a long random secret shared only with that resource server. Generate one with `openssl rand -hex 32` and store it in both services' secret managers.
+
+The MCP client must request the exact `ONEAUTH_MCP_RESOURCE_URL` as the OAuth `resource` parameter and request `mcp:connect`. The OAuth application must have `mcp:connect` enabled. OneAuth validates the registered resource URI during authorization and binds the issued opaque access token to that exact audience. If `resource` is omitted, the existing built-in `/api/mcp` resource remains the default.
+
+The external MCP resource server validates access tokens by POSTing `token` and `token_type_hint=access_token` to `/api/oauth/introspect`, with `X-OneAuth-Resource-Server-Key` set to the shared resource-server secret. This credential is distinct from OAuth client credentials. Resource-server introspection only returns active tokens whose audience exactly matches `ONEAUTH_MCP_RESOURCE_URL`; it does not permit refresh-token introspection. The endpoint still checks token expiry/revocation and active user, client, and organization state.
+
+Never put the resource-server key in an OAuth client, MCP client, device, browser, repository, or URL. Rotate it if exposed. Keep the MCP server's public resource URI and OneAuth's configured URI byte-for-byte identical, including path and trailing-slash normalization.

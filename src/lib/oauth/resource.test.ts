@@ -24,3 +24,18 @@ test("identity-only tokens are not issued for privileged API resources", () => {
   assert.equal(resourceMatches(issuer + "/api/mcp", issuer + "/api/mcp"), true);
   assert.equal(resourceMatches(issuer + "/api/mcp", issuer + "/api/v1"), false);
 });
+
+
+test("configured external MCP resource is allowed only when explicitly requested", () => {
+  const previous = process.env.ONEAUTH_MCP_RESOURCE_URL;
+  process.env.ONEAUTH_MCP_RESOURCE_URL = "https://mesh.example.test/mcp";
+  try {
+    assert.equal(resolveOAuthResource("", ["mcp:connect"], issuer), issuer + "/api/mcp");
+    assert.equal(resolveOAuthResource("https://mesh.example.test/mcp", ["mcp:connect"], issuer), "https://mesh.example.test/mcp");
+    assert.equal(resolveOAuthResource("https://attacker.example/mcp", ["mcp:connect"], issuer), null);
+    assert.equal(resolveOAuthResource("https://mesh.example.test/mcp", ["openid"], issuer), null);
+  } finally {
+    if (previous === undefined) delete process.env.ONEAUTH_MCP_RESOURCE_URL;
+    else process.env.ONEAUTH_MCP_RESOURCE_URL = previous;
+  }
+});
