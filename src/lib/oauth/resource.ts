@@ -1,3 +1,5 @@
+export const DEFAULT_EXTERNAL_MCP_RESOURCE_URL = "https://mcp.nishantapps.in/mcp";
+
 const apiScopes = new Set(["users:read","users:write","oauth:read","oauth:write"]);
 const identityScopes = new Set(["openid","profile","email","users:read","offline_access","custom_data:read","custom_data:write"]);
 
@@ -7,7 +9,7 @@ function isIdentityScope(scope: string) {
 
 export function resolveOAuthResource(requested: string, scopes: string[], issuer: string): string | null {
   const api = issuer + "/api/v1";
-  const configuredMcp = (process.env.ONEAUTH_MCP_RESOURCE_URL ?? "").trim().replace(/\/+$/, "");
+  const configuredMcp = (process.env.ONEAUTH_MCP_RESOURCE_URL ?? DEFAULT_EXTERNAL_MCP_RESOURCE_URL).trim().replace(/\/+$/, "");
   const ownMcp = issuer + "/api/mcp";
   const mcp = configuredMcp || ownMcp;
   if (configuredMcp) {

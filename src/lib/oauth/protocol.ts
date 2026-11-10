@@ -5,7 +5,7 @@ export { hashOpaqueToken, randomOpaqueToken, safeEqual, createPkceChallenge } fr
 
 export type OAuthClient = {
   id:string; clientId:string; secretHash:string|null; clientType:string; authMethod:string;
-  grantTypes:string[]; isActive:boolean; deleted:boolean; organizationId:string|null; name:string;
+  grantTypes:string[]; isActive:boolean; deleted:boolean; organizationId:string|null; name:string; isDynamicMcpClient:boolean;
 };
 
 export function oauthError(error:string,status=400,description?:string) {
@@ -13,17 +13,23 @@ export function oauthError(error:string,status=400,description?:string) {
 }
 
 export async function findClient(clientId:string):Promise<OAuthClient|null> {
-  const rows=await db.runtime().query(db.raw.sql`SELECT c.id,c.client_id AS "clientId",c.client_secret_hash AS "secretHash",c.client_type AS "clientType",c.token_endpoint_auth_method AS "authMethod",array_to_string(c.grant_types, ',') AS "grantTypes",c.is_active AS "isActive",(c.deleted_at IS NOT NULL) AS deleted,c.organization_id AS "organizationId",c.name,o.status AS "organizationStatus",o.deleted_at AS "organizationDeleted" FROM public.oauth_clients c LEFT JOIN public.organizations o ON o.id=c.organization_id WHERE c.client_id=${clientId} LIMIT 1`.returnsRow({
-    id:"pg/uuid@1",clientId:"pg/text@1",secretHash:"pg/text@1",clientType:"pg/text@1",authMethod:"pg/text@1",grantTypes:"pg/text@1",isActive:"pg/bool@1",deleted:"pg/bool@1",organizationId:"pg/text@1",name:"pg/text@1",organizationStatus:"pg/text@1",organizationDeleted:"pg/timestamptz-string@1"
+  const rows=await db.runtime().query(db.raw.sql`SELECT c.id,c.client_id AS "clientId",c.client_secret_hash AS "secretHash",c.client_type AS "clientType",c.token_endpoint_auth_method AS "authMethod",array_to_string(CASE WHEN c.description='Dynamically registered public MCP client' AND c.client_secret_hash IS NULL AND EXISTS (SELECT 1 FROM public.oauth_client_scopes mcs WHERE mcs.oauth_client_id=c.id AND mcs.scope_name='mcp:connect') THEN array_append(c.grant_types,'refresh_token') ELSE c.grant_types END, ',') AS "grantTypes",COALESCE(c.description='Dynamically registered public MCP client',false) AS "isDynamicMcpClient",c.is_active AS "isActive",(c.deleted_at IS NOT NULL) AS deleted,c.organization_id AS "organizationId",c.name,o.status AS "organizationStatus",o.deleted_at AS "organizationDeleted" FROM public.oauth_clients c LEFT JOIN public.organizations o ON o.id=c.organization_id WHERE c.client_id=${clientId} LIMIT 1`.returnsRow({
+    id:"pg/uuid@1",clientId:"pg/text@1",secretHash:"pg/text@1",clientType:"pg/text@1",authMethod:"pg/text@1",grantTypes:"pg/text@1",isDynamicMcpClient:"pg/bool@1",isActive:"pg/bool@1",deleted:"pg/bool@1",organizationId:"pg/text@1",name:"pg/text@1",organizationStatus:"pg/text@1",organizationDeleted:"pg/timestamptz-string@1"
   }).build());
   const row=rows[0];
   if(!row||!row.isActive||row.deleted||!isSupportedClientAuthMethod(row.authMethod)||(row.organizationId&&(row.organizationStatus!=="ACTIVE"||row.organizationDeleted))) return null;
   return {...row,grantTypes:row.grantTypes?row.grantTypes.split(","):[],organizationId:row.organizationId||null} as OAuthClient;
 }
 
-export async function getClientScopes(clientDbId:string):Promise<string[]> {
+export async function getClientScopes(clientDbId:string, allowDynamicMcpCompatibility=false):Promise<string[]> {
   const rows=await db.runtime().query(db.raw.sql`SELECT scope_name AS name FROM public.oauth_client_scopes WHERE oauth_client_id=${clientDbId}::uuid ORDER BY scope_name`.returnsRow({name:"pg/text@1"}).build());
-  return rows.map(row=>row.name);
+  const scopes=rows.map(row=>row.name);
+  // Older DCR records predate ChatGPT's OIDC scope defaults. Limit compatibility
+  // to marked public MCP clients that already have mcp:connect registered.
+  if (allowDynamicMcpCompatibility && scopes.includes("mcp:connect")) {
+    return [...new Set([...scopes,"openid","email","offline_access"])].sort();
+  }
+  return scopes;
 }
 
 export async function validRedirectUri(clientId:string,redirectUri:string) {
