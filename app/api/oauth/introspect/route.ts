@@ -4,6 +4,7 @@ import { findClient, hashOpaqueToken, oauthError, safeEqual } from "@/src/lib/oa
 import { allowOAuthRequest } from "@/src/lib/oauth/rate-limit";
 import { isFormUrlEncodedContentType } from "@/src/lib/oauth/validation";
 import { getIssuer } from "@/src/lib/oauth/oidc";
+import { DEFAULT_EXTERNAL_MCP_RESOURCE_URL } from "@/src/lib/oauth/resource";
 
 export const runtime = "nodejs";
 
@@ -45,7 +46,7 @@ export async function POST(request: Request) {
     } catch { return oauthError("temporarily_unavailable", 503); }
 
     const form = await request.formData();
-    const expectedResource = (process.env.ONEAUTH_MCP_RESOURCE_URL ?? "").trim().replace(/\/+$/, "");
+    const expectedResource = (process.env.ONEAUTH_MCP_RESOURCE_URL ?? DEFAULT_EXTERNAL_MCP_RESOURCE_URL).trim().replace(/\/+$/, "");
     const suppliedResourceKey = request.headers.get("x-oneauth-resource-server-key") ?? "";
     const configuredResourceKey = process.env.ONEAUTH_MCP_RESOURCE_SERVER_KEY ?? "";
     const isResourceServer = Boolean(expectedResource && configuredResourceKey && suppliedResourceKey && safeEqual(suppliedResourceKey, configuredResourceKey));
