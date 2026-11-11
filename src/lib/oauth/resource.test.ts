@@ -1,11 +1,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { resolveOAuthResource, resourceMatches } from "./resource.ts";
+import { DEFAULT_EXTERNAL_MCP_RESOURCE_URL, resolveOAuthResource, resourceMatches } from "./resource.ts";
 
 const issuer = "https://login.example.test";
 
+test("the default external MCP audience is the canonical universal endpoint", () => {
+  assert.equal(DEFAULT_EXTERNAL_MCP_RESOURCE_URL, "https://mcp.nishantapps.in/mcp");
+});
+
 test("default OAuth resource follows the requested scopes", () => {
   assert.equal(resolveOAuthResource("", ["mcp:connect"], issuer), issuer + "/api/mcp");
+  assert.equal(resolveOAuthResource(DEFAULT_EXTERNAL_MCP_RESOURCE_URL, ["mcp:connect"], issuer), DEFAULT_EXTERNAL_MCP_RESOURCE_URL);
   assert.equal(resolveOAuthResource("", ["oauth:read"], issuer), issuer + "/api/v1");
   assert.equal(resolveOAuthResource("", ["openid", "profile"], issuer), issuer);
 });
@@ -32,6 +37,7 @@ test("configured external MCP resource is allowed only when explicitly requested
   try {
     assert.equal(resolveOAuthResource("", ["mcp:connect"], issuer), issuer + "/api/mcp");
     assert.equal(resolveOAuthResource("https://mesh.example.test/mcp", ["mcp:connect"], issuer), "https://mesh.example.test/mcp");
+    assert.equal(resolveOAuthResource(DEFAULT_EXTERNAL_MCP_RESOURCE_URL, ["mcp:connect"], issuer), null);
     assert.equal(resolveOAuthResource("https://attacker.example/mcp", ["mcp:connect"], issuer), null);
     assert.equal(resolveOAuthResource("https://mesh.example.test/mcp", ["openid"], issuer), null);
   } finally {

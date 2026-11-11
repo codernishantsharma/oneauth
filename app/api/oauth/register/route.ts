@@ -63,8 +63,13 @@ export async function POST(request: Request) {
       body.client_secret !== undefined || body.client_secret_expires_at !== undefined)
     return dcrError("invalid_client_metadata", 400, "Client-supplied secrets and unverified key metadata are not accepted.");
 
-  const requestedScopes = typeof body.scope === "string"
-    ? [...new Set(body.scope.trim().split(/\s+/).filter(Boolean))] : ["mcp:connect"];
+  // ChatGPT's DCR request may omit `scope`; register the identity and refresh
+  // permissions it subsequently requests, alongside the MCP resource scope.
+  const requiredMcpScopes = ["mcp:connect", "openid", "email", "offline_access"];
+  const requestedScopes = [...new Set([
+    ...(typeof body.scope === "string" ? body.scope.trim().split(/\s+/).filter(Boolean) : []),
+    ...requiredMcpScopes,
+  ])];
   if (!requestedScopes.length || requestedScopes.length > allowedScopes.size || requestedScopes.some(scope => !allowedScopes.has(scope)))
     return dcrError("invalid_client_metadata", 400, "One or more requested scopes are not available for dynamic MCP clients.");
   if (!requestedScopes.includes("mcp:connect"))

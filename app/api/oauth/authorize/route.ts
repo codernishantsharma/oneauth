@@ -44,7 +44,7 @@ export async function GET(request: Request) {
   if (!client || !client.grantTypes.includes("authorization_code")) return apiError("Unknown or disabled application.", 400);
   if (!(await validRedirectUri(clientId, redirectUri))) return apiError("The redirect URI is not registered for this application.", 400);
   try { if (!(await allowOAuthRequest(request, `authorize:${clientId}`, 30, 60))) return apiError("Too many requests. Please retry later.", 429); } catch { return apiError("Rate limiting is temporarily unavailable. Please retry later.", 503); }
-  const clientScopes = await getClientScopes(client.id);
+  const clientScopes = await getClientScopes(client.id, client.isDynamicMcpClient);
   const requestedScopes = parseRequestedScopes(scopeString, clientScopes);
   if (!requestedScopes) return apiError("One or more requested permissions are unsupported or not registered for this application.", 400);
   let resource: string | null;
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     const client = await findClient(clientId);
     if (!client || !client.grantTypes.includes("authorization_code") || !(await validRedirectUri(clientId, redirectUri))) return apiError("Invalid application request.", 400);
     if (!isValidOAuthState(state) || redirectUri.length > 2048 || !isValidOidcNonce(nonce) || !isValidPkceChallenge(challenge, "S256") || !scopes.length) return apiError("Invalid authorization request.", 400);
-    const clientScopes = await getClientScopes(client.id);
+    const clientScopes = await getClientScopes(client.id, client.isDynamicMcpClient);
     if (!parseRequestedScopes(scopes.join(" "), clientScopes)) return apiError("Application permission mismatch.", 400);
     let checkedResource: string | null;
     try { checkedResource = resolveOAuthResource(resource, scopes, getIssuer()); } catch { return apiError("Authorization server configuration error.", 503); }

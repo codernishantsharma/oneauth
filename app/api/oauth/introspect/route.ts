@@ -4,6 +4,7 @@ import { findClient, hashOpaqueToken, oauthError, safeEqual } from "@/src/lib/oa
 import { allowOAuthRequest } from "@/src/lib/oauth/rate-limit";
 import { isFormUrlEncodedContentType } from "@/src/lib/oauth/validation";
 import { getIssuer } from "@/src/lib/oauth/oidc";
+import { DEFAULT_EXTERNAL_MCP_RESOURCE_URL } from "@/src/lib/oauth/resource";
 
 export const runtime = "nodejs";
 
@@ -45,11 +46,96 @@ export async function POST(request: Request) {
     } catch { return oauthError("temporarily_unavailable", 503); }
 
     const form = await request.formData();
-    const expectedResource = (process.env.ONEAUTH_MCP_RESOURCE_URL ?? "").trim().replace(/\/+$/, "");
-    const suppliedResourceKey = request.headers.get("x-oneauth-resource-server-key") ?? "";
-    const configuredResourceKey = process.env.ONEAUTH_MCP_RESOURCE_SERVER_KEY ?? "";
-    const isResourceServer = Boolean(expectedResource && configuredResourceKey && suppliedResourceKey && safeEqual(suppliedResourceKey, configuredResourceKey));
-    const client = isResourceServer ? null : await authenticateClient(request, form);
+   
+const expectedResource = (
+  process.env.ONEAUTH_MCP_RESOURCE_URL ??
+  DEFAULT_EXTERNAL_MCP_RESOURCE_URL
+).trim().replace(/\/+$/, "");
+
+const suppliedResourceKey =
+  request.headers.get("x-oneauth-resource-server-key")?.trim() ?? "";
+
+const configuredResourceKey =
+  process.env.ONEAUTH_MCP_RESOURCE_SERVER_KEY?.trim() ?? "";
+
+const hasResourceServerHeader = suppliedResourceKey.length > 0;
+const hasConfiguredResourceKey = configuredResourceKey.length > 0;
+
+// Return actionable diagnostics without ever exposing either secret.
+function resourceAuthError(
+  code: string,
+  description: string,
+  status = 401
+) {
+  console.error("[OneAuth Introspection] Resource-server authentication failed:", {
+    code,
+    description,
+    expectedResourceConfigured: Boolean(expectedResource),
+    configuredKeyPresent: hasConfiguredResourceKey,
+    suppliedKeyPresent: hasResourceServerHeader,
+  });
+
+  return Response.json(
+    {
+      error: "invalid_client",
+      error_code: code,
+      error_description: description,
+    },
+    {
+      status,
+      headers: {
+        "Cache-Control": "no-store",
+        Pragma: "no-cache",
+        "WWW-Authenticate": 'Basic realm="OneAuth Introspection"',
+      },
+    }
+  );
+}
+
+let isResourceServer = false;
+
+if (hasResourceServerHeader) {
+  if (!expectedResource) {
+    return resourceAuthError(
+      "MCP_RESOURCE_URL_NOT_CONFIGURED",
+      "OneAuth has no expected MCP resource URL. Configure ONEAUTH_MCP_RESOURCE_URL.",
+      500
+    );
+  }
+
+  if (!hasConfiguredResourceKey) {
+    return resourceAuthError(
+      "MCP_RESOURCE_SERVER_KEY_NOT_CONFIGURED",
+      "OneAuth is missing ONEAUTH_MCP_RESOURCE_SERVER_KEY. Configure it in the deployed environment and redeploy.",
+      500
+    );
+  }
+
+  if (!safeEqual(suppliedResourceKey, configuredResourceKey)) {
+    return resourceAuthError(
+      "MCP_RESOURCE_SERVER_KEY_MISMATCH",
+      "The x-oneauth-resource-server-key header was received, but its value does not match ONEAUTH_MCP_RESOURCE_SERVER_KEY. Set both services to the same key."
+    );
+  }
+
+  isResourceServer = true;
+}
+
+const client = isResourceServer
+  ? null
+  : await authenticateClient(request, form);
+
+if (!client && !isResourceServer) {
+  return oauthError("invalid_client", 401);
+}
+
+console.info("[OneAuth Introspection] Authentication successful:", {
+  authenticationMethod: isResourceServer
+    ? "mcp-resource-server"
+    : "oauth-client",
+  expectedResource,
+});
+
     if (!client && !isResourceServer) return oauthError("invalid_client", 401);
     try {
       if (!(await allowOAuthRequest(request, `introspect:${isResourceServer ? "mcp-resource-server" : client!.clientId}`, 120, 60))) return oauthError("temporarily_unavailable", 429);
