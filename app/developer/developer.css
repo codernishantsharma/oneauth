@@ -1,0 +1,152 @@
+/* Developer portal form controls and typography */
+.developer-portal-scope { min-width: 0; color: #202424; font-size: 14px; line-height: 1.55; }
+.developer-portal-scope .portal-page-heading h1,
+.developer-portal-scope .portal-panel-heading h2,
+.developer-portal-scope .developer-modal h2 { color: #171a1a; line-height: 1.25; letter-spacing: -.025em; }
+.developer-portal-scope .portal-description,
+.developer-portal-scope .portal-panel > p,
+.developer-portal-scope .developer-client-heading p { color: #626969; line-height: 1.65; }
+.developer-portal-scope .developer-content-grid > .portal-panel { min-width: 0; padding: 20px; }
+.developer-portal-scope .developer-steps { padding-left: 1.35rem; color: #454b4b; line-height: 1.7; }
+.developer-portal-scope .developer-steps li + li { margin-top: 5px; }
+.developer-portal-scope .developer-steps a,
+.developer-portal-scope .developer-client-heading a { color: #202525; text-decoration: underline; text-decoration-color: #c6cccc; text-underline-offset: 3px; }
+.developer-portal-scope .developer-client-card { display: block; min-width: 0; padding: 18px; border: 1px solid #e5e8e8; border-radius: 14px; background: #fff; }
+.developer-portal-scope .developer-client-card dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 20px; }
+.developer-portal-scope .developer-client-card dd { margin: 0; color: #252a2a; font-size: 13px; line-height: 1.55; }
+.developer-portal-scope .developer-client-card code,
+.developer-portal-scope .developer-endpoint,
+.developer-portal-scope .developer-copy-field code { font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; line-height: 1.6; }
+.developer-portal-scope .developer-endpoint { max-width: 100%; background: #f7f8f8; color: #303636; }
+.developer-portal-scope .developer-modal { border: 1px solid #e0e4e4; border-radius: 20px; background: #fff; color: #202424; }
+.developer-portal-scope .developer-modal-heading { padding-bottom: 16px; border-bottom: 1px solid #ecefef; }
+.developer-portal-scope .developer-modal .portal-eyebrow { color: #6a7171; font-size: 10px; letter-spacing: .12em; }
+.developer-portal-scope .developer-modal label { display: flex; flex-direction: column; align-items: stretch; gap: 7px; margin: 16px 0; color: #333939; font-size: 13px; font-weight: 600; line-height: 1.45; }
+.developer-portal-scope .developer-modal label > span { display: inline; font-weight: 400; }
+.developer-portal-scope .developer-modal input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.developer-portal-scope .developer-modal textarea,
+.developer-portal-scope .developer-modal select,
+.developer-portal-scope input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.developer-portal-scope textarea,
+.developer-portal-scope select { display: block; width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px; border: 1px solid #d8dddd; border-radius: 10px; outline: none; background: #fff; color: #202525; font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.5; box-shadow: 0 1px 2px rgb(16 24 24 / 3%); transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease; }
+.developer-portal-scope .developer-modal textarea,
+.developer-portal-scope textarea { min-height: 100px; resize: vertical; }
+.developer-portal-scope .developer-modal input::placeholder,
+.developer-portal-scope .developer-modal textarea::placeholder,
+.developer-portal-scope input::placeholder,
+.developer-portal-scope textarea::placeholder { color: #929999; opacity: 1; }
+.developer-portal-scope .developer-modal input:focus,
+.developer-portal-scope .developer-modal textarea:focus,
+.developer-portal-scope .developer-modal select:focus,
+.developer-portal-scope input:focus-visible,
+.developer-portal-scope textarea:focus-visible,
+.developer-portal-scope select:focus-visible { border-color: #6b7474; box-shadow: 0 0 0 3px rgb(50 60 60 / 10%); }
+.developer-portal-scope .developer-modal fieldset { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; margin: 18px 0; padding: 14px; border: 1px solid #e1e5e5; border-radius: 12px; background: #fafbfb; }
+.developer-portal-scope .developer-modal legend { padding: 0 6px; color: #333939; font-size: 12px; font-weight: 700; }
+.developer-portal-scope .developer-modal fieldset label { display: flex; flex-direction: row; align-items: center; gap: 9px; min-width: 0; margin: 0; color: #454b4b; font-size: 12px; font-weight: 500; cursor: pointer; }
+.developer-portal-scope .developer-modal input[type="checkbox"],
+.developer-portal-scope .developer-modal input[type="radio"],
+.developer-portal-scope input[type="checkbox"],
+.developer-portal-scope input[type="radio"] { width: 16px; height: 16px; min-width: 16px; min-height: 16px; margin: 0; accent-color: #242929; cursor: pointer; }
+.developer-portal-scope .developer-modal-actions { padding-top: 16px; border-top: 1px solid #ecefef; }
+.developer-portal-scope .developer-copy-field { min-width: 0; background: #f7f8f8; }
+.developer-portal-scope .developer-copy-field button { flex: 0 0 auto; min-height: 32px; padding: 5px 10px; border: 1px solid #d9dede; border-radius: 8px; background: #fff; color: #252a2a; font-size: 12px; font-weight: 600; cursor: pointer; }
+.developer-portal-scope .developer-copy-field button:hover { background: #eef0f0; }
+.developer-portal-scope button:disabled { cursor: not-allowed; opacity: .55; }
+.developer-portal-scope :focus-visible { outline: 2px solid #687272; outline-offset: 2px; }
+@media (max-width: 760px) {
+  .developer-portal-scope .developer-client-card dl,
+  .developer-portal-scope .developer-modal fieldset { grid-template-columns: minmax(0, 1fr); }
+  .developer-portal-scope .developer-modal { padding: 18px; }
+  .developer-portal-scope .developer-modal-actions { flex-wrap: wrap; }
+}
+
+/* Overview page: use all available space instead of leaving an empty fourth grid column. */
+.developer-portal-scope .developer-overview-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.developer-portal-scope .developer-overview-metric { min-width: 0; min-height: 112px; padding: 18px 20px; }
+.developer-portal-scope .developer-overview-metric h2 { margin: 8px 0 4px; color: #202424; font-size: 15px; font-weight: 650; line-height: 1.4; letter-spacing: -.015em; }
+.developer-portal-scope .developer-overview-metric p { margin: 0; color: #626969; font-size: 13px; line-height: 1.6; }
+.developer-portal-scope .developer-overview-links { display: grid; gap: 0; padding: 0; }
+.developer-portal-scope .developer-overview-links p { margin: 0; border-bottom: 1px solid #eef0f0; }
+.developer-portal-scope .developer-overview-links p:last-child { border-bottom: 0; }
+.developer-portal-scope .developer-overview-links a { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px; padding: 12px 2px; color: #252a2a; font-size: 14px; line-height: 1.55; text-decoration: none; }
+.developer-portal-scope .developer-overview-links a > span:first-child { color: #626969; }
+.developer-portal-scope .developer-overview-links a:hover { color: #000; text-decoration: underline; text-decoration-color: #aeb6b6; text-underline-offset: 3px; }
+@media (max-width: 760px) {
+  .developer-portal-scope .developer-overview-metrics { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Organization/team management forms need their own layout (they are not modal forms). */
+.developer-portal-scope .developer-modal-form { display: grid; gap: 14px; }
+.developer-portal-scope .developer-modal-form > label,
+.developer-portal-scope .developer-field-label { display: flex; flex-direction: column; align-items: stretch; gap: 7px; margin: 0; color: #343a3a; font-size: 13px; font-weight: 600; line-height: 1.45; }
+.developer-portal-scope .developer-modal-form > button { justify-self: start; min-height: 40px; margin-top: 1px; padding: 0 16px; font-size: 12px; }
+.developer-portal-scope .developer-client-list { margin-top: 14px; }
+.developer-portal-scope .developer-client-card { padding: 18px; }
+.developer-portal-scope .developer-client-heading { align-items: flex-start; }
+.developer-portal-scope .developer-client-heading h3 { margin: 0 0 4px; overflow-wrap: anywhere; color: #222727; font-size: 14px; line-height: 1.45; }
+.developer-portal-scope .developer-client-heading p { margin: 0; font-size: 12px; line-height: 1.5; text-transform: uppercase; letter-spacing: .02em; }
+.developer-portal-scope .developer-client-actions { margin-top: 12px; }
+.developer-portal-scope .developer-client-actions select { width: 100%; }
+.developer-portal-scope .portal-success { margin: 12px 0; color: #14734e; font-size: 13px; }
+@media (max-width: 560px) {
+  .developer-portal-scope .developer-client-card { padding: 15px; }
+  .developer-portal-scope .developer-modal-form > button { width: 100%; }
+}
+
+/* API-key permissions: selectable cards with clear labels, descriptions and scope IDs. */
+.developer-portal-scope .api-scope-picker { min-width: 0; margin: 4px 0 0; padding: 0; border: 0; background: transparent; }
+.developer-portal-scope .api-scope-picker > legend { padding: 0; color: #252a2a; font-size: 14px; font-weight: 700; }
+.developer-portal-scope .api-scope-hint { margin: 5px 0 13px; color: #6a7171; font-size: 12px; line-height: 1.6; }
+.developer-portal-scope .api-scope-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.developer-portal-scope .api-scope-option { display: flex; flex-direction: row; align-items: flex-start; gap: 11px; min-width: 0; margin: 0; padding: 14px; border: 1px solid #dfe4e4; border-radius: 12px; background: #fff; cursor: pointer; transition: border-color 140ms ease, background-color 140ms ease, box-shadow 140ms ease; }
+.developer-portal-scope .api-scope-option:hover { border-color: #aeb8b8; background: #fafbfb; }
+.developer-portal-scope .api-scope-option.is-selected { border-color: #707b7b; background: #f5f7f7; box-shadow: inset 0 0 0 1px rgb(70 80 80 / 7%); }
+.developer-portal-scope .api-scope-option input[type="checkbox"] { flex: 0 0 17px; width: 17px; height: 17px; margin-top: 2px; accent-color: #202626; }
+.developer-portal-scope .api-scope-copy { display: grid; min-width: 0; gap: 5px; }
+.developer-portal-scope .api-scope-title { color: #242929; font-size: 13px; font-weight: 650; line-height: 1.4; }
+.developer-portal-scope .api-scope-description { color: #687070; font-size: 12px; font-weight: 400; line-height: 1.5; }
+.developer-portal-scope .api-scope-option code { justify-self: start; margin-top: 2px; padding: 3px 6px; border: 1px solid #e3e7e7; border-radius: 5px; background: #fff; color: #626a6a; font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 10px; line-height: 1.4; overflow-wrap: anywhere; }
+.developer-portal-scope .api-scope-count { margin: 11px 0 0; color: #687070; font-size: 11px; }
+@media (max-width: 680px) { .developer-portal-scope .api-scope-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* Developer documentation page */
+.developer-portal-scope .developer-docs{max-width:1440px;margin:0 auto}
+.developer-portal-scope .docs-hero{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(260px,.7fr);gap:28px;margin:24px 0;padding:clamp(22px,4vw,42px);border:1px solid #dfe4e4;border-radius:22px;background:linear-gradient(135deg,#fff,#f5f7f7)}
+.developer-portal-scope .docs-hero-copy{align-self:center;min-width:0}
+.developer-portal-scope .docs-kicker,.developer-portal-scope .docs-section-number,.developer-portal-scope .docs-mini-label{color:#727a7a;font-size:10px;font-weight:750;letter-spacing:.13em}
+.developer-portal-scope .docs-hero h2{max-width:600px;margin:14px 0;color:#171b1b;font-size:clamp(28px,4vw,44px);letter-spacing:-.045em;line-height:1.08}
+.developer-portal-scope .docs-hero p{max-width:560px;color:#626a6a;line-height:1.75}
+.developer-portal-scope .docs-hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.developer-portal-scope .docs-flow{display:flex;flex-direction:column;justify-content:center;gap:8px;padding:18px;border:1px solid #e4e8e8;border-radius:16px;background:#ffffffcc}
+.developer-portal-scope .docs-flow>div{display:grid;grid-template-columns:34px minmax(0,1fr);gap:2px 10px;align-items:center;padding:13px;border:1px solid #e9eded;border-radius:12px;background:#fff}
+.developer-portal-scope .docs-flow>div>span{grid-row:span 2;display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#f0f2f2;color:#3c4343;font-size:11px;font-weight:750}
+.developer-portal-scope .docs-flow strong{color:#202525;font-size:13px}.developer-portal-scope .docs-flow small{color:#747c7c;font-size:11px}.developer-portal-scope .docs-flow>i{align-self:center;color:#929999;font-style:normal;line-height:1}
+.developer-portal-scope .docs-search-wrap{display:grid;grid-template-columns:auto minmax(200px,1fr) auto;gap:14px;align-items:center;margin:26px 0;padding:13px 16px;border:1px solid #e2e6e6;border-radius:14px;background:#fff}
+.developer-portal-scope .docs-search-wrap label{color:#333a3a;font-size:12px;font-weight:700}.developer-portal-scope .docs-search-wrap input{min-height:40px}.developer-portal-scope .docs-search-wrap>span{color:#747b7b;font-size:11px;white-space:nowrap}
+.developer-portal-scope .docs-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:30px;align-items:start}
+.developer-portal-scope .docs-toc{position:sticky;top:22px;display:flex;flex-direction:column;gap:4px;padding:15px 10px;border:1px solid #e3e7e7;border-radius:15px;background:#fff}
+.developer-portal-scope .docs-toc>p{margin:3px 10px 9px;color:#7b8282;font-size:10px;font-weight:750;letter-spacing:.12em}
+.developer-portal-scope .docs-toc>a{padding:8px 10px;border-radius:8px;color:#4a5151;font-size:12px;text-decoration:none}.developer-portal-scope .docs-toc>a:hover{background:#f2f4f4;color:#171b1b}
+.developer-portal-scope .docs-help-card{margin-top:15px;padding:13px;border-radius:11px;background:#f4f6f6}.developer-portal-scope .docs-help-card strong{color:#242929;font-size:12px}.developer-portal-scope .docs-help-card p{color:#697171;font-size:11px;line-height:1.65}
+.developer-portal-scope .docs-help-card a,.developer-portal-scope .docs-article a{color:#252b2b;text-decoration:underline;text-decoration-color:#bfc6c6;text-underline-offset:3px}
+.developer-portal-scope .docs-article{min-width:0}.developer-portal-scope .docs-section{scroll-margin-top:20px;margin-bottom:20px;padding:clamp(20px,3vw,32px);border:1px solid #e2e6e6;border-radius:17px;background:#fff}
+.developer-portal-scope .docs-section-number{margin-bottom:12px}.developer-portal-scope .docs-section h2{margin:0 0 12px;color:#1b2020;font-size:24px;letter-spacing:-.035em}.developer-portal-scope .docs-section h3{margin:22px 0 8px;color:#262b2b;font-size:15px}
+.developer-portal-scope .docs-section p,.developer-portal-scope .docs-section li{color:#606868;font-size:13px;line-height:1.8}.developer-portal-scope .docs-section ol,.developer-portal-scope .docs-section ul{padding-left:22px}.developer-portal-scope .docs-section li+li{margin-top:6px}
+.developer-portal-scope .docs-section code{overflow-wrap:anywhere;padding:2px 4px;border-radius:4px;background:#f1f3f3;color:#333a3a;font-size:.92em}
+.developer-portal-scope .docs-code-panel{overflow:hidden;margin:17px 0;border:1px solid #252b2b;border-radius:12px;background:#171b1b}
+.developer-portal-scope .docs-code-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 13px;border-bottom:1px solid #343a3a;color:#bdc4c4;font-size:11px}
+.developer-portal-scope .docs-code-toolbar button{padding:6px 10px;border:1px solid #505858;border-radius:7px;background:#282e2e;color:#fff;font-size:11px;cursor:pointer}
+.developer-portal-scope .docs-code-panel pre{overflow:auto;max-width:100%;margin:0;padding:17px;color:#e4e9e9;font:12px/1.8 var(--font-geist-mono),ui-monospace,SFMono-Regular,Menlo,monospace;tab-size:2}
+.developer-portal-scope .docs-code-panel pre code{padding:0;background:transparent;color:inherit;font:inherit;white-space:pre}
+.developer-portal-scope .docs-note,.developer-portal-scope .docs-warning{margin:18px 0;padding:15px 17px;border:1px solid #e1e5e5;border-radius:11px;background:#f6f8f8}
+.developer-portal-scope .docs-warning{border-color:#e6dfcc;background:#fbf8f0}.developer-portal-scope .docs-note strong,.developer-portal-scope .docs-warning strong{color:#333939;font-size:12px}.developer-portal-scope .docs-note p,.developer-portal-scope .docs-warning p{margin:5px 0 0;font-size:12px}
+.developer-portal-scope .docs-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}.developer-portal-scope .docs-card-grid article{min-width:0;padding:17px;border:1px solid #e3e7e7;border-radius:12px;background:#fbfcfc}.developer-portal-scope .docs-card-grid h3{margin:8px 0}.developer-portal-scope .docs-card-grid p{margin:0;font-size:12px}
+.developer-portal-scope .docs-claims{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:16px}.developer-portal-scope .docs-claims>div{display:flex;flex-direction:column;gap:6px;padding:12px;border:1px solid #e5e8e8;border-radius:10px}.developer-portal-scope .docs-claims>div span{color:#687070;font-size:11px;line-height:1.6}
+.developer-portal-scope .docs-table{overflow:auto;margin:18px 0;border:1px solid #e1e5e5;border-radius:11px}.developer-portal-scope .docs-table>div{display:grid;grid-template-columns:minmax(90px,.65fr) minmax(150px,1fr) minmax(140px,1.2fr);gap:12px;padding:12px;border-bottom:1px solid #ecefef;align-items:start}
+.developer-portal-scope .docs-table>div:first-child{background:#f5f7f7;color:#3e4545;font-size:11px;font-weight:750}.developer-portal-scope .docs-table>div:last-child{border-bottom:0}.developer-portal-scope .docs-table>div>*{min-width:0;color:#5d6565;font-size:11px;line-height:1.7;overflow-wrap:anywhere}.developer-portal-scope .docs-table code{background:transparent}
+.developer-portal-scope .docs-check-list{list-style:none;padding-left:0!important}.developer-portal-scope .docs-check-list li{padding:8px 10px 8px 30px;border-bottom:1px solid #eff1f1;position:relative}.developer-portal-scope .docs-check-list li:before{content:"✓";position:absolute;left:8px;color:#394242;font-weight:800}
+.developer-portal-scope .docs-section details{padding:14px 0;border-bottom:1px solid #e9eded}.developer-portal-scope .docs-section details:last-of-type{border-bottom:0}.developer-portal-scope .docs-section summary{cursor:pointer;color:#343a3a;font-size:13px;font-weight:700}.developer-portal-scope .docs-section details p{margin-bottom:0}
+.developer-portal-scope .docs-empty{padding:34px;border:1px dashed #cfd5d5;border-radius:15px;text-align:center}.developer-portal-scope .docs-footer{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding:18px 3px 8px;color:#7a8282;font-size:10px;letter-spacing:.08em}
+@media(max-width:900px){.developer-portal-scope .docs-layout{grid-template-columns:1fr;gap:16px}.developer-portal-scope .docs-toc{position:static;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.developer-portal-scope .docs-toc>p,.developer-portal-scope .docs-help-card{grid-column:1/-1}}
+@media(max-width:640px){.developer-portal-scope .docs-hero{grid-template-columns:1fr}.developer-portal-scope .docs-search-wrap{grid-template-columns:1fr auto}.developer-portal-scope .docs-search-wrap label{grid-column:1/-1}.developer-portal-scope .docs-card-grid,.developer-portal-scope .docs-claims{grid-template-columns:1fr}.developer-portal-scope .docs-table>div{grid-template-columns:minmax(72px,.5fr) minmax(130px,1fr)}.developer-portal-scope .docs-table>div>:last-child{grid-column:1/-1}}
